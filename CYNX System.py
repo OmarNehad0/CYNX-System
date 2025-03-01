@@ -480,7 +480,7 @@ class OrderButton(View):
             return
 
         # ✅ Send application notification and store the message object
-        bot_spam_channel = bot.get_channel(1208792947232079955)
+        bot_spam_channel = bot.get_channel(1345349082608041996)
         if bot_spam_channel:
             embed = discord.Embed(title="📌 Job Application Received", color=discord.Color.green())
             embed.add_field(name="👷 Applicant", value=interaction.user.mention, inline=True)
