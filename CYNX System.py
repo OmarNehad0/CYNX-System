@@ -192,7 +192,7 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
     discord.app_commands.Choice(name="Add", value="add"),
     discord.app_commands.Choice(name="Remove", value="remove")
 ])
-async def add_remove_spent(interaction: discord.Interaction, action: str, user: discord.Member, value: int):
+async def add_remove_spent(interaction: discord.Interaction, user: discord.Member, action: str, value: float):
     if not has_permission(interaction.user):  # Check role permissions
         await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
         return
