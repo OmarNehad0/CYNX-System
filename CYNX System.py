@@ -174,11 +174,11 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
     thumbnail_url = user.avatar.url if user.avatar else default_thumbnail
 
     # Create embed message
-    embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.blue())
+    embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.from_rgb(139, 0, 0))
     embed.set_thumbnail(url=thumbnail_url)
-    embed.add_field(name="📥 Deposit", value=f"```💵 {deposit_value}M```", inline=False)
-    embed.add_field(name="<:cashstack:1210284059926986792> Wallet", value=f"```🤑 {wallet_value}M```", inline=False)
-    embed.add_field(name="💲 Spent", value=f"```🎃 {spent_value}M```", inline=False)
+    embed.add_field(name="<:70023pepepresident:1321482641475637349> Deposit", value=f"```💵 {deposit_value}M```", inline=False)
+    embed.add_field(name="<:200pxBlood_money_detail:1210284746966306846> Wallet", value=f"```🤑 {wallet_value}M```", inline=False)
+    embed.add_field(name="<:wolf:1261406634802941994> Spent", value=f"```🎃 {spent_value}M```", inline=False)
     embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
 
     # Ensure requester avatar exists
@@ -221,7 +221,7 @@ async def add_remove_spent(interaction: discord.Interaction, user: discord.Membe
     # Create embed response
     embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.blue())
     embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
-    embed.add_field(name="💸 Spent", value=f"```🛍️ {spent_value:,}M```", inline=False)
+    embed.add_field(name="<:wolf:1261406634802941994> Spent", value=f"```🎃 {spent_value:,}M```", inline=False)
     embed.set_footer(text=f"Updated by {interaction.user.display_name}", icon_url=interaction.user.avatar.url)
 
     await interaction.response.send_message(f"✅ {action.capitalize()}ed {value:,}M spent.", embed=embed)
@@ -325,9 +325,9 @@ async def wallet_add_remove(interaction: discord.Interaction, user: discord.Memb
     embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.blue())
     embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
 
-    embed.add_field(name="📥 Deposit", value=f"```💵 {deposit_value:,}M```", inline=False)
-    embed.add_field(name="💰 Wallet", value=f"```💰 {wallet_value:,}M```", inline=False)
-    embed.add_field(name="💸 Spent", value=f"```🛍️ {spent_value:,}M```", inline=False)
+    embed.add_field(name="<:70023pepepresident:1321482641475637349> Deposit", value=f"```💵 {deposit_value:,}M```", inline=False)
+    embed.add_field(name="<:200pxBlood_money_detail:1210284746966306846> Wallet", value=f"```🤑 {wallet_value:,}M```", inline=False)
+    embed.add_field(name="<:wolf:1261406634802941994> Spent", value=f"```🎃 {spent_value:,}M```", inline=False)
     embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
     embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.user.avatar.url)
     
@@ -366,16 +366,16 @@ async def deposit(interaction: discord.Interaction, user: discord.Member, action
     updated_wallet = get_wallet(user_id)
 
     # Format values
-    deposit_value = f"```💵 {updated_wallet['deposit']:,}M```"
-    wallet_value = f"```💰 {updated_wallet['wallet']:,}M```"
-    spent_value = f"```🛍️ {updated_wallet['spent']:,}M```"
+    deposit_value = f"```<:70023pepepresident:1321482641475637349> {updated_wallet['deposit']:,}M```"
+    wallet_value = f"```<:200pxBlood_money_detail:1210284746966306846> {updated_wallet['wallet']:,}M```"
+    spent_value = f"```<:wolf:1261406634802941994> {updated_wallet['spent']:,}M```"
 
     # Create an embed
     embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.blue())
     embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
-    embed.add_field(name="📥 Deposit", value=deposit_value, inline=False)
-    embed.add_field(name="💰 Wallet", value=wallet_value, inline=False)
-    embed.add_field(name="💸 Spent", value=spent_value, inline=False)
+    embed.add_field(name="<:70023pepepresident:1321482641475637349> Deposit", value=deposit_value, inline=False)
+    embed.add_field(name="<:200pxBlood_money_detail:1210284746966306846> Wallet", value=wallet_value, inline=False)
+    embed.add_field(name="<:wolf:1261406634802941994> Spent", value=spent_value, inline=False)
     embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.user.avatar.url)
     embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
     # Send response
@@ -410,28 +410,28 @@ async def tip(interaction: discord.Interaction, user: discord.Member, value: int
     tip_message = f"💸 {interaction.user.mention} tipped {user.mention} **{value:,}M**!"
 
     # Format numbers with commas (e.g., 1,000M)
-    sender_deposit = f"```💵 {sender_wallet['deposit']:,}M```"
-    sender_wallet_value = f"```💰 {sender_wallet['wallet']:,}M```"
-    sender_spent = f"```🛍️ {sender_wallet['spent']:,}M```"
+    sender_deposit = f"```<:70023pepepresident:1321482641475637349> {sender_wallet['deposit']:,}M```"
+    sender_wallet_value = f"```<:200pxBlood_money_detail:1210284746966306846> {sender_wallet['wallet']:,}M```"
+    sender_spent = f"```<:wolf:1261406634802941994> {sender_wallet['spent']:,}M```"
 
-    recipient_deposit = f"```💵 {recipient_wallet['deposit']:,}M```"
-    recipient_wallet_value = f"```💰 {recipient_wallet['wallet']:,}M```"
-    recipient_spent = f"```🛍️ {recipient_wallet['spent']:,}M```"
+    recipient_deposit = f"```<:70023pepepresident:1321482641475637349> {recipient_wallet['deposit']:,}M```"
+    recipient_wallet_value = f"```<:200pxBlood_money_detail:1210284746966306846> {recipient_wallet['wallet']:,}M```"
+    recipient_spent = f"```<:wolf:1261406634802941994> {recipient_wallet['spent']:,}M```"
 
     # Sender's wallet embed
     sender_embed = discord.Embed(title=f"{interaction.user.display_name}'s Updated Wallet 💳", color=discord.Color.red())
     sender_embed.set_thumbnail(url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
-    sender_embed.add_field(name="📥 Deposit", value=sender_deposit, inline=False)
-    sender_embed.add_field(name="💰 Wallet", value=sender_wallet_value, inline=False)
-    sender_embed.add_field(name="💸 Spent", value=sender_spent, inline=False)
+    sender_embed.add_field(name="<:70023pepepresident:1321482641475637349> Deposit", value=sender_deposit, inline=False)
+    sender_embed.add_field(name="<:200pxBlood_money_detail:1210284746966306846> Wallet", value=sender_wallet_value, inline=False)
+    sender_embed.add_field(name="<:wolf:1261406634802941994> Spent", value=sender_spent, inline=False)
     sender_embed.set_footer(text=f"Tip sent to {user.display_name}", icon_url=user.avatar.url)
     sender_embed.set_image(url="https://media.discordapp.net/attachments/1332341372333723732/1333038474571284521/avatar11.gif?ex=67977052&is=67961ed2&hm=e48d59d1efb3fcacae515a33dbb6182ef59c0268fba45628dd213c2cc241d66a&=")
     # Recipient's wallet embed
     recipient_embed = discord.Embed(title=f"{user.display_name}'s Updated Wallet 💳", color=discord.Color.green())
     recipient_embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
-    recipient_embed.add_field(name="📥 Deposit", value=recipient_deposit, inline=False)
-    recipient_embed.add_field(name="💰 Wallet", value=recipient_wallet_value, inline=False)
-    recipient_embed.add_field(name="💸 Spent", value=recipient_spent, inline=False)
+    recipient_embed.add_field(name="<:70023pepepresident:1321482641475637349> Deposit", value=recipient_deposit, inline=False)
+    recipient_embed.add_field(name="<:200pxBlood_money_detail:1210284746966306846> Wallet", value=recipient_wallet_value, inline=False)
+    recipient_embed.add_field(name="<:wolf:1261406634802941994> Spent", value=recipient_spent, inline=False)
     recipient_embed.set_footer(text=f"Tip received from {interaction.user.display_name}", icon_url=interaction.user.avatar.url)
     recipient_embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
     # Send the tip message publicly
