@@ -177,8 +177,8 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
     embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.blue())
     embed.set_thumbnail(url=thumbnail_url)
     embed.add_field(name="📥 Deposit", value=f"```💵 {deposit_value}M```", inline=False)
-    embed.add_field(name="💰 Wallet", value=f"```💰 {wallet_value}M```", inline=False)
-    embed.add_field(name="💸 Spent", value=f"```🛍️ {spent_value}M```", inline=False)
+    embed.add_field(name="<:cashstack:1210284059926986792> Wallet", value=f"```🤑 {wallet_value}M```", inline=False)
+    embed.add_field(name="💲 Spent", value=f"```🎃 {spent_value}M```", inline=False)
     embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
 
     # Ensure requester avatar exists
