@@ -479,15 +479,24 @@ class OrderButton(View):
             await interaction.response.send_message("You do not have enough deposit to claim this order!", ephemeral=True)
             return
 
-        # Send application notification in bot spam channel
+        # ✅ Send application notification and store the message object
         bot_spam_channel = bot.get_channel(1208792947232079955)
         if bot_spam_channel:
-            application_view = ApplicationView(self.order_id, interaction.user.id, self.customer_id, self.original_channel_id, self.message_id, self.post_channel_id, self.deposit_required)
             embed = discord.Embed(title="📌 Job Application Received", color=discord.Color.green())
             embed.add_field(name="👷 Applicant", value=interaction.user.mention, inline=True)
             embed.add_field(name="🆔 Order ID", value=str(self.order_id), inline=True)
             embed.set_footer(text="Choose to Accept or Reject the applicant.")
-            await bot_spam_channel.send(embed=embed, view=application_view)
+
+            # ✅ Store the message object
+            message_obj = await bot_spam_channel.send(embed=embed)
+
+            # ✅ Pass message_obj to ApplicationView
+            application_view = ApplicationView(
+                self.order_id, interaction.user.id, self.customer_id,
+                self.original_channel_id, self.message_id, self.post_channel_id,
+                self.deposit_required, message_obj
+            )
+            await message_obj.edit(view=application_view)  # Attach the buttons
 
         await interaction.response.send_message("Your application has been submitted for review!", ephemeral=True)
 
