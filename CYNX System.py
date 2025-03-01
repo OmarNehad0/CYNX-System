@@ -292,7 +292,7 @@ async def check_and_assign_roles(user: discord.Member, spent_value: int, client)
     discord.app_commands.Choice(name="Add", value="add"),
     discord.app_commands.Choice(name="Remove", value="remove")
 ])
-async def wallet_add_remove(interaction: discord.Interaction, user: discord.Member, action: str, value: int):
+async def wallet_add_remove(interaction: discord.Interaction, user: discord.Member, action: str, value: float):  
     if not has_permission(interaction.user):
         await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
         return
@@ -746,8 +746,8 @@ async def complete(interaction: Interaction, order_id: int):
 
     # Transfer funds
     update_wallet(str(order["customer"]), "spent", order["value"])
-    worker_payment = int(order["value"] * 0.85)  # 85% to worker
-    update_wallet(str(order["worker"]), "wallet", worker_payment)
+    worker_payment = round(order["value"] * 0.85, 1)  # Keeps one decimal place
+    update_wallet(str(order["worker"]), "wallet", float(worker_payment))  # Ensure it's stored as float
     orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
     
     # Notify the original channel
