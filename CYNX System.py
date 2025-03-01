@@ -492,7 +492,7 @@ class OrderButton(View):
         await interaction.response.send_message("Your application has been submitted for review!", ephemeral=True)
 
 class ApplicationView(View):
-    def __init__(self, order_id, applicant_id, customer_id, original_channel_id, message_id, post_channel_id, deposit_required):
+    def __init__(self, order_id, applicant_id, customer_id, original_channel_id, message_id, post_channel_id, deposit_required, message_obj):
         super().__init__(timeout=None)
         self.order_id = order_id
         self.applicant_id = applicant_id
@@ -500,8 +500,8 @@ class ApplicationView(View):
         self.original_channel_id = original_channel_id
         self.message_id = message_id
         self.post_channel_id = post_channel_id
-        self.deposit_required = deposit_required  # Fix: Add deposit_required
-
+        self.deposit_required = deposit_required  
+        self.message_obj = message_obj  # Store the applicant's message object
 
     @discord.ui.button(label="✅ Accept", style=discord.ButtonStyle.success)
     async def accept_applicant(self, interaction: Interaction, button: discord.ui.Button):
@@ -528,6 +528,12 @@ class ApplicationView(View):
             except:
                 pass
 
+        # Delete the applicant's message
+        try:
+            await self.message_obj.delete()
+        except:
+            pass
+
         # Grant worker access
         original_channel = bot.get_channel(self.original_channel_id)
         if original_channel:
@@ -545,7 +551,10 @@ class ApplicationView(View):
             embed.add_field(name="🆔 Order ID", value=self.order_id, inline=True)
             embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
             embed.set_footer(text="Cynx System", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
-            await original_channel.send(embed=embed)
+            sent_message = await original_channel.send(embed=embed)
+
+            # ✅ Pin the order claimed message
+            await sent_message.pin()
 
             claim_message = f"**Hello! <@{self.customer_id}>, <@{self.applicant_id}> is your worker for this job. You can provide additional info using `!inf`**"
             await original_channel.send(claim_message)
@@ -561,9 +570,16 @@ class ApplicationView(View):
         await interaction.response.defer()
         await interaction.followup.send(f"Applicant <@{self.applicant_id}> has been rejected.", ephemeral=True)
 
+        # Delete the applicant's message
+        try:
+            await self.message_obj.delete()
+        except:
+            pass
+
         # Disable buttons after rejection
         self.disable_all_items()
         await interaction.message.edit(view=self)
+
 
 
 
