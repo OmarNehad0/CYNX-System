@@ -868,3 +868,52 @@ async def on_ready():
         print(f"Synced {len(synced)} commands.")
     except Exception as e:
         print(f"Error syncing commands: {e}")
+
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    try:
+        synced = await bot.tree.sync()  # Sync all slash commands
+        print(f"Synced {len(synced)} commands.")
+    except Exception as e:
+        print(f"Error syncing commands: {e}")
+
+# Flask setup for keeping the bot alive (Replit hosting)
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run():
+    app.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    thread = Thread(target=run)
+    thread.start()
+
+# Add restart command for the bot (Owner-only)
+@bot.command()
+@commands.is_owner()
+async def restart(ctx):
+    await ctx.send("Restarting bot...")
+    os.execv(__file__, ['python'] + os.sys.argv)
+
+# Retrieve the token from the environment variable
+token = os.getenv('DISCORD_BOT_TOKEN')
+if not token:
+    print("Error: DISCORD_BOT_TOKEN is not set in the environment variables.")
+    exit(1)
+
+# Keep the bot alive for Replit hosting
+keep_alive()
+
+@bot.command()
+async def test(ctx):
+    await ctx.send("Bot is responding!")
+
+@bot.command()
+async def ping(ctx):
+    await ctx.send("Pong!")
+# Run the bot with the token
+bot.run(token)
