@@ -575,14 +575,14 @@ class ApplicationView(View):
         # ✅ Delete the applicant's message
         try:
            await self.message_obj.delete()
-         except:
+        except:
              pass
 
-         await interaction.followup.send("Applicant accepted and added to the order channel!", ephemeral=True)
+        await interaction.followup.send("Applicant accepted and added to the order channel!", ephemeral=True)
 
-         # ✅ Disable buttons after action
-         self.disable_all_items()
-         await interaction.message.edit(view=self)
+        # ✅ Disable buttons after action
+        self.disable_all_items()
+        await interaction.message.edit(view=self)
 
 
 
