@@ -567,20 +567,35 @@ class ApplicationView(View):
         post_channel = bot.get_channel(self.post_channel_id)
         if post_channel:
             try:
-               message = await post_channel.fetch_message(self.message_id)
-               await message.delete()
+                message = await post_channel.fetch_message(self.message_id)
+                await message.delete()
             except:
                 pass
 
         # ✅ Delete the applicant's message
         try:
-           await self.message_obj.delete()
+            await self.message_obj.delete()
         except:
-             pass
+            pass
 
         await interaction.followup.send("Applicant accepted and added to the order channel!", ephemeral=True)
 
         # ✅ Disable buttons after action
+        self.disable_all_items()
+        await interaction.message.edit(view=self)
+
+    @discord.ui.button(label="❌ Reject", style=discord.ButtonStyle.danger)
+    async def reject_applicant(self, interaction: Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        await interaction.followup.send(f"Applicant <@{self.applicant_id}> has been rejected.", ephemeral=True)
+
+        # ✅ Delete the applicant's message
+        try:
+            await self.message_obj.delete()
+        except:
+            pass
+
+        # ✅ Disable buttons after rejection
         self.disable_all_items()
         await interaction.message.edit(view=self)
 
