@@ -538,13 +538,17 @@ class ApplicationView(View):
                 await interaction.followup.send("❌ Could not find the applicant in the server!", ephemeral=True)
                 return
 
-            # ✅ Send the order claimed message
+             # ✅ Restored the original embed for order claimed
             embed = discord.Embed(title="🎡 Order Claimed", color=discord.Color.blue())
             embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
             embed.set_author(name="✅ Cynx System ✅", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
+            embed.add_field(name="📕 Description", value="No description provided.", inline=False)  # Placeholder
             embed.add_field(name="👷 Worker", value=f"<@{self.applicant_id}>", inline=True)
             embed.add_field(name="📌 Customer", value=f"<@{self.customer_id}>", inline=True)
             embed.add_field(name="💵 Deposit Required", value=f"{self.deposit_required}M", inline=True)
+            embed.add_field(name="🤑 Order Value", value="N/A", inline=True)  # Placeholder
+            embed.add_field(name="🆔 Order ID", value=self.order_id, inline=True)
+            embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
             embed.set_footer(text="Cynx System", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
             sent_message = await original_channel.send(embed=embed)
             await sent_message.pin()  # ✅ Pin the order claimed message
@@ -662,7 +666,7 @@ async def post(interaction: discord.Interaction, customer: discord.Member, value
     embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
     embed.set_author(name="💼 Order Posted", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
     embed.add_field(name="📕 Description", value=description, inline=False)
-    embed.add_field(name="💲🤑 Value", value=f"{value}M", inline=True)
+    embed.add_field(name="💰 Value", value=f"{value}M", inline=True)
     embed.add_field(name="💵 Deposit Required", value=f"{deposit_required}M", inline=True)
     embed.add_field(name="🕵️‍♂️ Holder", value=holder.mention, inline=True)
     embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
@@ -713,7 +717,7 @@ async def set_order(interaction: Interaction, customer: discord.Member, value: i
     embed.set_author(name="🛠️ Order Set", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
     embed.add_field(name="📕 Description", value=description, inline=False)
     embed.add_field(name="📌 Customer", value=customer.mention, inline=True)
-    embed.add_field(name="💲🤑 Value", value=f"{value}M", inline=True)
+    embed.add_field(name="🤑 Value", value=f"{value}M", inline=True)
     embed.add_field(name="💵 Deposit Required", value=f"{deposit_required}M", inline=True)
     embed.add_field(name="🕵️‍♂️ Holder", value=holder.mention, inline=True)
     embed.add_field(name="👷 Worker", value=worker.mention, inline=True)
@@ -782,7 +786,7 @@ async def complete(interaction: Interaction, order_id: int):
         embed.add_field(name="📕 Description", value=order.get("description", "No description provided."), inline=False)
         embed.add_field(name="👷 Worker", value=f"<@{order['worker']}>", inline=True)
         embed.add_field(name="📌 Customer", value=f"<@{order['customer']}>", inline=True)
-        embed.add_field(name="💲🤑 Value", value=f"{order['value']}M", inline=True)
+        embed.add_field(name="🤑 Value", value=f"{order['value']}M", inline=True)
         embed.add_field(name="👷‍♂️ Worker Payment", value=f"{worker_payment}M", inline=True)
         embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
         embed.set_footer(text=f"Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
@@ -796,7 +800,7 @@ async def complete(interaction: Interaction, order_id: int):
         dm_embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
         dm_embed.add_field(name="📕 Description", value=order.get("description", "No description provided."), inline=False)
         dm_embed.add_field(name="📌 Customer", value=f"<@{order['customer']}>", inline=True)
-        dm_embed.add_field(name="💲🤑 Value", value=f"{order['value']}M", inline=True)
+        dm_embed.add_field(name="🤑 Value", value=f"{order['value']}M", inline=True)
         dm_embed.add_field(name="👷‍♂️ Your Payment", value=f"{worker_payment}M", inline=True)
         dm_embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
         dm_embed.set_footer(text=f"Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
@@ -876,7 +880,7 @@ async def view_order(interaction: discord.Interaction, order_id: int):
     embed.add_field(name="🎟️ Holder", value=f"<@{holder_id}>" if isinstance(holder_id, int) else holder_id, inline=False)
     embed.add_field(name="📕 Description", value=description, inline=False)
     embed.add_field(name="💵 Deposit", value=f"{deposit}M", inline=True)
-    embed.add_field(name="💲🤑 Order Value", value=f"{value}M", inline=True)
+    embed.add_field(name="🤑 Order Value", value=f"{value}M", inline=True)
     embed.add_field(name="🆔 Order ID", value=order_id, inline=False)
 
     await interaction.response.send_message(embed=embed)
