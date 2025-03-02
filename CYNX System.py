@@ -504,7 +504,7 @@ class ApplicationView(View):
     def __init__(self, order_id, applicant_id, customer_id, original_channel_id, message_id, post_channel_id, deposit_required, message_obj):
         super().__init__(timeout=None)
         self.order_id = order_id
-        self.applicant_id = applicant_id
+        self.applicant_id = applicant_id  # ✅ This is the worker
         self.customer_id = customer_id
         self.original_channel_id = original_channel_id
         self.message_id = message_id
@@ -525,10 +525,35 @@ class ApplicationView(View):
             await interaction.followup.send("This order has already been claimed!", ephemeral=True)
             return
 
-        # Assign worker
+        # ✅ Assign worker in the database
         orders_collection.update_one({"_id": self.order_id}, {"$set": {"worker": self.applicant_id}})
 
-        # Delete the original order post
+        # ✅ Grant worker access to the original order channel
+        original_channel = bot.get_channel(self.original_channel_id)
+        if original_channel:
+            worker = interaction.guild.get_member(self.applicant_id)  # Fetch the applicant as a member
+            if worker:
+                await original_channel.set_permissions(worker, read_messages=True, send_messages=True)
+            else:
+                await interaction.followup.send("❌ Could not find the applicant in the server!", ephemeral=True)
+                return
+
+            # ✅ Send the order claimed message
+            embed = discord.Embed(title="🎡 Order Claimed", color=discord.Color.blue())
+            embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
+            embed.set_author(name="✅ Cynx System ✅", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
+            embed.add_field(name="👷 Worker", value=f"<@{self.applicant_id}>", inline=True)
+            embed.add_field(name="📌 Customer", value=f"<@{self.customer_id}>", inline=True)
+            embed.add_field(name="💵 Deposit Required", value=f"{self.deposit_required}M", inline=True)
+            embed.set_footer(text="Cynx System", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
+            sent_message = await original_channel.send(embed=embed)
+            await sent_message.pin()  # ✅ Pin the order claimed message
+
+            # ✅ Notify customer and worker
+            claim_message = f"**Hello! <@{self.customer_id}>, <@{self.applicant_id}> is your worker for this job. You can provide additional info using `!inf`**"
+            await original_channel.send(claim_message)
+
+        # ✅ Delete the original job post
         post_channel = bot.get_channel(self.post_channel_id)
         if post_channel:
             try:
@@ -537,40 +562,15 @@ class ApplicationView(View):
             except:
                 pass
 
-        # Delete the applicant's message
+        # ✅ Delete the applicant's message
         try:
             await self.message_obj.delete()
         except:
             pass
 
-        # Grant worker access
-        original_channel = bot.get_channel(self.original_channel_id)
-        if original_channel:
-            await original_channel.set_permissions(interaction.user, read_messages=True, send_messages=True)
+        await interaction.followup.send("Applicant accepted and added to the order channel!", ephemeral=True)
 
-            value = order.get("value", "N/A")
-            embed = discord.Embed(title="🎡 Order Claimed", color=discord.Color.blue())
-            embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
-            embed.set_author(name="✅ Cynx System ✅", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
-            embed.add_field(name="📕 Description", value=order.get("description", "No description provided."), inline=False)
-            embed.add_field(name="👷 Worker", value=f"<@{self.applicant_id}>", inline=True)
-            embed.add_field(name="📌 Customer", value=f"<@{self.customer_id}>", inline=True)
-            embed.add_field(name="💵 Deposit Required", value=f"{self.deposit_required}M", inline=True)
-            embed.add_field(name="💲🤑 Order Value", value=f"{value}M", inline=True)
-            embed.add_field(name="🆔 Order ID", value=self.order_id, inline=True)
-            embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
-            embed.set_footer(text="Cynx System", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
-            sent_message = await original_channel.send(embed=embed)
-
-            # ✅ Pin the order claimed message
-            await sent_message.pin()
-
-            claim_message = f"**Hello! <@{self.customer_id}>, <@{self.applicant_id}> is your worker for this job. You can provide additional info using `!inf`**"
-            await original_channel.send(claim_message)
-
-        await interaction.followup.send("Applicant accepted and assigned as the worker!", ephemeral=True)
-
-        # Disable buttons after action
+        # ✅ Disable buttons after action
         self.disable_all_items()
         await interaction.message.edit(view=self)
 
@@ -579,17 +579,15 @@ class ApplicationView(View):
         await interaction.response.defer()
         await interaction.followup.send(f"Applicant <@{self.applicant_id}> has been rejected.", ephemeral=True)
 
-        # Delete the applicant's message
+        # ✅ Delete the applicant's message
         try:
             await self.message_obj.delete()
         except:
             pass
 
-        # Disable buttons after rejection
+        # ✅ Disable buttons after rejection
         self.disable_all_items()
         await interaction.message.edit(view=self)
-
-
 
 
 
