@@ -882,6 +882,7 @@ async def view_order(interaction: discord.Interaction, order_id: int):
 
     embed = discord.Embed(title="📦 Order Details", color=discord.Color.from_rgb(139, 0, 0))
     embed.add_field(name="📊 Status", value=status, inline=False)
+    embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
     embed.add_field(name="👷 Worker", value=f"<@{worker_id}>" if isinstance(worker_id, int) else worker_id, inline=False)
     embed.add_field(name="📌 Customer", value=f"<@{customer_id}>" if isinstance(customer_id, int) else customer_id, inline=False)
     embed.add_field(name="🎟️ Holder", value=f"<@{holder_id}>" if isinstance(holder_id, int) else holder_id, inline=False)
@@ -889,7 +890,8 @@ async def view_order(interaction: discord.Interaction, order_id: int):
     embed.add_field(name="💵 Deposit", value=f"**```{deposit}M```**", inline=True)
     embed.add_field(name="💰 Order Value", value=f"**```{value}M```**", inline=True)
     embed.add_field(name="🆔 Order ID", value=order_id, inline=False)
-
+    embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
+    embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
     await interaction.response.send_message(embed=embed)
 
 
