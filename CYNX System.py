@@ -131,15 +131,6 @@ def update_wallet(user_id, field, value):
         {"$inc": {field: value}},  # Increment the field (e.g., wallet, deposit, spent)
         upsert=True  # Insert a new document if one doesn't exist
     )
-    # Ensure client is correctly used
-    if field == "spent" and isinstance(client, discord.Client):
-        guild = client.get_guild(1208792946401615893)  # Replace with your actual Guild ID
-        if guild:
-            user = guild.get_member(int(user_id))
-            if user:
-                updated_wallet = get_wallet(user_id)  
-                spent_value = updated_wallet.get("spent", 0)
-                asyncio.create_task(check_and_assign_roles(user, spent_value, client))
 
 @bot.tree.command(name="wallet", description="Check a user's wallet balance")
 async def wallet(interaction: discord.Interaction, user: discord.Member = None):
