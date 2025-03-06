@@ -120,15 +120,15 @@ def get_wallet(user_id):
 
 
 # Function to update wallet in MongoDB
-def update_wallet(user_id, field, value):
+async def update_wallet(user_id, field, value, client):
     # Make sure the wallet document exists before updating
     wallet_data = get_wallet(user_id)
     
-    # If the wallet does not contain the required field, we initialize it with the correct value
+    # If the wallet does not contain the required field, initialize it
     if field not in wallet_data:
-        wallet_data[field] = 0  # Initialize the field if missing
-    
-    # Update wallet data by incrementing the field value
+        wallet_data[field] = 0  
+
+    # Update wallet data in MongoDB
     wallets_collection.update_one(
         {"user_id": user_id},
         {"$inc": {field: value}},  # Increment the field (e.g., wallet, deposit, spent)
