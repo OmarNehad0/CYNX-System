@@ -119,28 +119,33 @@ def get_wallet(user_id):
 
 
 
-async def update_wallet(user_id, field, value, client=None):
+# Function to update wallet in MongoDB
+def update_wallet(user_id, field, value, client):
     # Make sure the wallet document exists before updating
     wallet_data = get_wallet(user_id)
     
+    # If the wallet does not contain the required field, we initialize it with the correct value
     if field not in wallet_data:
-        wallet_data[field] = 0  
-
+        wallet_data[field] = 0  # Initialize the field if missing
+    
+    # Update wallet data by incrementing the field value
     wallets_collection.update_one(
         {"user_id": user_id},
-        {"$inc": {field: value}},
-        upsert=True
+        {"$inc": {field: value}},  # Increment the field (e.g., wallet, deposit, spent)
+        upsert=True  # Insert a new document if one doesn't exist
     )
 
-    # If 'spent' is updated and client is provided, check role assignments
-    if field == "spent" and client:
-        guild = client.get_guild(YOUR_GUILD_ID)
+    # If the 'spent' field was updated, check for role milestones
+    if field == "spent":
+        guild = client.get_guild(YOUR_GUILD_ID)  # Replace with your actual guild ID
         if guild:
             user = guild.get_member(int(user_id))
             if user:
-                updated_wallet = get_wallet(user_id)
+                updated_wallet = get_wallet(user_id)  # Get the updated spent value
                 spent_value = updated_wallet.get("spent", 0)
-                await check_and_assign_roles(user, spent_value, client)
+
+                # Run the role check asynchronously
+                asyncio.create_task(check_and_assign_roles(user, spent_value, client))
 
 
 @bot.tree.command(name="wallet", description="Check a user's wallet balance")
