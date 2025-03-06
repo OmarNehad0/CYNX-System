@@ -120,21 +120,33 @@ def get_wallet(user_id):
 
 
 # Function to update wallet in MongoDB
-def update_wallet(user_id, field, value):
+async def update_wallet(user_id, field, value, client):
     # Make sure the wallet document exists before updating
     wallet_data = get_wallet(user_id)
-    
-    # If the wallet does not contain the required field, we initialize it with the correct value
+
+    # If the wallet does not contain the required field, initialize it
     if field not in wallet_data:
-        wallet_data[field] = 0  # Initialize the field if missing
-    
-    # Update wallet data by incrementing the field value
+        wallet_data[field] = 0  
+
+    # Update wallet data in MongoDB
     wallets_collection.update_one(
         {"user_id": user_id},
         {"$inc": {field: value}},  # Increment the field (e.g., wallet, deposit, spent)
         upsert=True  # Insert a new document if one doesn't exist
     )
 
+    # If the 'spent' field was updated, check for role milestones
+    if field == "spent":
+        # Fetch user from guild
+        guild = client.get_guild(YOUR_GUILD_ID)  # Replace with your actual guild ID
+        user = guild.get_member(int(user_id))
+
+        if user:
+            updated_wallet = get_wallet(user_id)  # Get the updated spent value
+            spent_value = updated_wallet.get("spent", 0)
+
+            # Trigger role assignment check
+            await check_and_assign_roles(user, spent_value, client)
 
 @bot.tree.command(name="wallet", description="Check a user's wallet balance")
 async def wallet(interaction: discord.Interaction, user: discord.Member = None):
