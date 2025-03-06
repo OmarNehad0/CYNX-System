@@ -60,7 +60,6 @@ counters_collection = db["order_counters"]  # New collection to track order ID
 
 # The fixed orders posting channel
 ORDERS_CHANNEL_ID = 1208792946401615893
-GUILD_ID = 123456789012345678  # Replace this with your actual Guild ID
 # Allowed roles for commands
 ALLOWED_ROLES = {1208792946430836736, 1208792946401615900, 1211406868480532571, 1208792946401615902}
 
@@ -132,16 +131,6 @@ def update_wallet(user_id, field, value):
         {"$inc": {field: value}},  # Increment the field (e.g., wallet, deposit, spent)
         upsert=True  # Insert a new document if one doesn't exist
     )
-    # Fetch user from guild
-    guild = client.get_guild(YOUR_GUILD_ID)  # Replace with your actual guild ID
-    if guild:
-        user = guild.get_member(int(user_id))
-        if user:
-            updated_wallet = get_wallet(user_id)  # Get updated wallet data
-            spent_value = updated_wallet.get("spent", 0)
-
-            # Run the async function without blocking execution
-            asyncio.create_task(check_and_assign_roles(user, spent_value, client))
 
 
 @bot.tree.command(name="wallet", description="Check a user's wallet balance")
