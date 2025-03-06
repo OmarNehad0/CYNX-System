@@ -98,6 +98,63 @@ async def on_ready():
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
+async def check_and_assign_roles(user: discord.Member, spent_value: int, client):
+    """
+    Checks user's spent amount and assigns the correct role if they reach milestones.
+    Sends a congrats message in the announcement channel.
+    """
+    role_milestones = {
+        1: 1212554296294514768,  # 1M+
+        4000: 1210262407994413176,  # 4M+
+        5000: 1210262187638132806,  # 5M+
+        7000: 1210090197845282908,  # 7M+
+        9000: 1210088939919118336,  # 9M+
+        14000: 1209962980179968010  # 14M+
+    }
+
+    # Fetch the correct channel
+    congrats_channel = client.get_channel(1210687108457701468)  # Ensure it's the correct ID
+    if congrats_channel is None:
+        try:
+            congrats_channel = await client.fetch_channel(1210687108457701468)  
+            print(f"[DEBUG] Successfully fetched channel: {congrats_channel.name} ({congrats_channel.id})")
+        except discord.NotFound:
+            print("[ERROR] Channel not found in API!")
+            return
+        except discord.Forbidden:
+            print("[ERROR] Bot lacks permission to fetch the channel!")
+            return
+        except Exception as e:
+            print(f"[ERROR] Unexpected error fetching channel: {e}")
+            return
+
+    print(f"[DEBUG] Checking roles for {user.display_name} | Spent: {spent_value}")
+
+    for threshold, role_id in sorted(role_milestones.items()):
+        role = user.guild.get_role(role_id)
+        if not role:
+            print(f"[ERROR] Role ID {role_id} not found in guild!")
+            continue
+        
+        print(f"[DEBUG] Checking role {role.name} ({role_id}) for threshold {threshold}")
+
+        if spent_value >= threshold and role not in user.roles:
+            print(f"[DEBUG] Assigning role {role.name} to {user.display_name}")
+            await user.add_roles(role)
+
+            # Send congrats message
+            print(f"[DEBUG] Sending congrats message for {user.display_name}")
+            embed = discord.Embed(
+            title="🎉 Congratulations!",
+            description=f"{user.mention} has reached **{threshold:,}M+** spent and earned a new role!",
+            color=discord.Color.gold()
+            )
+            embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
+            embed.add_field(name="🏅 New Role Earned:", value=f"{role.mention}", inline=False)
+            embed.set_footer(text="Keep spending to reach new Lifetime Rank! ✨", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif" )
+            embed.set_author(name="✅ Cynx System ✅", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
+            await congrats_channel.send(embed=embed)
+
 def get_wallet(user_id):
     # Attempt to fetch the user's wallet data from MongoDB
     wallet_data = wallets_collection.find_one({"user_id": user_id})
