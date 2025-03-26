@@ -283,39 +283,50 @@ async def check_and_assign_roles(user: discord.Member, spent_value: int, client)
 
 async def watch_wallet_updates(bot):
     """
-    Watches the MongoDB 'wallets' collection for changes.
-    Triggers check_and_assign_roles() when 'spent' updates.
+    Watches MongoDB 'wallets' collection for changes.
+    If 'spent' field updates, triggers check_and_assign_roles().
     """
     pipeline = [{"$match": {"operationType": "update"}}]  # Only watch updates
     change_stream = wallets_collection.watch(pipeline)
 
-    async for change in change_stream:
-        try:
-            user_id = change["documentKey"]["user_id"]  # Get user ID
-            updated_fields = change["updateDescription"]["updatedFields"]
+    print("[DEBUG] MongoDB Watcher started...")
 
-            # Check if 'spent' value was modified
-            if "spent" in updated_fields:
-                spent_value = updated_fields["spent"]
-                
-                # Fetch the Discord user from the bot
-                guild = bot.get_guild(YOUR_GUILD_ID)  # Replace with your server ID
-                user = guild.get_member(int(user_id))
+    try:
+        async for change in change_stream:
+            try:
+                user_id = change["documentKey"]["user_id"]  # Get user ID
+                updated_fields = change["updateDescription"]["updatedFields"]
 
-                if user:
-                    print(f"[DEBUG] Spent updated for {user.display_name}: {spent_value}M")
-                    await check_and_assign_roles(user, spent_value, bot)
-                else:
-                    print(f"[ERROR] User {user_id} not found in guild!")
+                # Check if 'spent' value was modified
+                if "spent" in updated_fields:
+                    spent_value = updated_fields["spent"]
+                    
+                    # Fetch the Discord user from the bot
+                    guild = bot.get_guild(YOUR_GUILD_ID)  # Replace with your server ID
+                    user = guild.get_member(int(user_id))
 
-        except Exception as e:
-            print(f"[ERROR] Error in MongoDB watch: {e}")
+                    if user:
+                        print(f"[DEBUG] Spent updated for {user.display_name}: {spent_value}M")
+                        await check_and_assign_roles(user, spent_value, bot)
+                    else:
+                        print(f"[ERROR] User {user_id} not found in guild!")
+
+            except Exception as e:
+                print(f"[ERROR] Error processing MongoDB update: {e}")
+    except Exception as e:
+        print(f"[ERROR] MongoDB Watcher failed: {e}")
+
+async def start_mongo_watcher(bot):
+    """Runs the MongoDB watcher in the background."""
+    loop = asyncio.get_event_loop()
+    loop.create_task(watch_wallet_updates(bot))
+
 @bot.event
 async def on_ready():
     print(f"✅ {bot.user} is now online!")
     
     # Start watching MongoDB for wallet updates
-    asyncio.create_task(watch_wallet_updates(bot))
+    asyncio.create_task(start_mongo_watcher(bot))
 
 
 # /wallet_add_remove command
