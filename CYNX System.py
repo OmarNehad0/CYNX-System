@@ -138,7 +138,7 @@ async def async_update_wallet(user: discord.Member, field: str, value: float, cl
     user_id = str(user.id)
     updated_spent = update_wallet(user_id, field, value)
 
-    # Check and assign roles after updating spent
+    # If the spent value was updated, check and assign roles
     if field == "spent":
         await check_and_assign_roles(user, updated_spent, client)
 
