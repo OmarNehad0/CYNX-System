@@ -310,6 +310,13 @@ async def watch_wallet_updates(bot):
 
         except Exception as e:
             print(f"[ERROR] Error in MongoDB watch: {e}")
+@bot.event
+async def on_ready():
+    print(f"✅ {bot.user} is now online!")
+    
+    # Start watching MongoDB for wallet updates
+    asyncio.create_task(watch_wallet_updates(bot))
+
 
 # /wallet_add_remove command
 @bot.tree.command(name="wallet_add_remove", description="Add or remove value from a user's wallet")
