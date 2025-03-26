@@ -131,35 +131,6 @@ def update_wallet(user_id, field, value):
         {"$inc": {field: value}},  # Increment the field (e.g., wallet, deposit, spent)
         upsert=True  # Insert a new document if one doesn't exist
     )
-async def watch_wallet_updates(client, bot):
-    """
-    Watches the MongoDB 'wallets' collection for changes in the 'spent' field
-    and triggers role assignments accordingly.
-    """
-    pipeline = [{"$match": {"operationType": "update"}}]  # Only watch updates
-    change_stream = wallets_collection.watch(pipeline)
-
-    async for change in change_stream:
-        try:
-            user_id = change["documentKey"]["user_id"]  # Get user ID
-            updated_fields = change["updateDescription"]["updatedFields"]
-
-            # Check if 'spent' value was modified
-            if "spent" in updated_fields:
-                spent_value = updated_fields["spent"]
-                
-                # Fetch the Discord user from the bot
-                guild = bot.get_guild(YOUR_GUILD_ID)  # Replace with your server ID
-                user = guild.get_member(int(user_id))
-
-                if user:
-                    print(f"[DEBUG] Detected spent update for {user.display_name}: {spent_value}M")
-                    await check_and_assign_roles(user, spent_value, bot)
-                else:
-                    print(f"[ERROR] User {user_id} not found in guild!")
-
-        except Exception as e:
-            print(f"[ERROR] Error in MongoDB watch: {e}")
 
 @bot.tree.command(name="wallet", description="Check a user's wallet balance")
 async def wallet(interaction: discord.Interaction, user: discord.Member = None):
@@ -310,6 +281,35 @@ async def check_and_assign_roles(user: discord.Member, spent_value: int, client)
             await congrats_channel.send(embed=embed)
 
 
+async def watch_wallet_updates(bot):
+    """
+    Watches the MongoDB 'wallets' collection for changes.
+    Triggers check_and_assign_roles() when 'spent' updates.
+    """
+    pipeline = [{"$match": {"operationType": "update"}}]  # Only watch updates
+    change_stream = wallets_collection.watch(pipeline)
+
+    async for change in change_stream:
+        try:
+            user_id = change["documentKey"]["user_id"]  # Get user ID
+            updated_fields = change["updateDescription"]["updatedFields"]
+
+            # Check if 'spent' value was modified
+            if "spent" in updated_fields:
+                spent_value = updated_fields["spent"]
+                
+                # Fetch the Discord user from the bot
+                guild = bot.get_guild(YOUR_GUILD_ID)  # Replace with your server ID
+                user = guild.get_member(int(user_id))
+
+                if user:
+                    print(f"[DEBUG] Spent updated for {user.display_name}: {spent_value}M")
+                    await check_and_assign_roles(user, spent_value, bot)
+                else:
+                    print(f"[ERROR] User {user_id} not found in guild!")
+
+        except Exception as e:
+            print(f"[ERROR] Error in MongoDB watch: {e}")
 
 # /wallet_add_remove command
 @bot.tree.command(name="wallet_add_remove", description="Add or remove value from a user's wallet")
