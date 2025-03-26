@@ -770,8 +770,15 @@ async def complete(interaction: Interaction, order_id: int):
     update_wallet(str(order["worker"]), "wallet", float(worker_payment))  # Ensure it's stored as float
     orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
     
-    # Check and assign roles for spending milestones
-    await check_and_assign_roles(user, spent_value, interaction.client)
+   # Get the Discord user for role checks
+    guild = interaction.guild
+    customer = guild.get_member(int(customer_id))  # Fetch customer from Discord server
+
+    if customer:
+        spent_value = order["value"]  # Assuming "value" represents the amount spent
+        await check_and_assign_roles(customer, spent_value, interaction.client)
+    else:
+        print(f"[ERROR] Customer {customer_id} not found in the Discord server.")
 
     # Notify the original channel
     original_channel = bot.get_channel(order["original_channel_id"])
