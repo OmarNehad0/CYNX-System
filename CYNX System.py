@@ -131,6 +131,18 @@ def update_wallet(user_id, field, value):
         {"$inc": {field: value}},  # Increment the field (e.g., wallet, deposit, spent)
         upsert=True  # Insert a new document if one doesn't exist
     )
+async def async_update_wallet(user: discord.Member, field: str, value: float, client):
+    """
+    Asynchronous wrapper for update_wallet that ensures role checking.
+    """
+    user_id = str(user.id)
+    updated_spent = update_wallet(user_id, field, value)
+
+    # Check and assign roles after updating spent
+    if field == "spent":
+        await check_and_assign_roles(user, updated_spent, client)
+
+    return updated_spent
 
 @bot.tree.command(name="wallet", description="Check a user's wallet balance")
 async def wallet(interaction: discord.Interaction, user: discord.Member = None):
