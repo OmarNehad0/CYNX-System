@@ -758,19 +758,22 @@ async def complete(interaction: Interaction, order_id: int):
     
     order = orders_collection.find_one({"_id": order_id})
     if not order:
-        await interaction.response.send_message("Order not found!", ephemeral=True)
+        await interaction.response.send_message("❌ Order not found!", ephemeral=True)
         return
-    
-    # Removed the worker check to allow permission roles to complete orders
-    # Now, as long as the user has permission, they can mark the order as completed
 
-    # Transfer funds
-    update_wallet(str(order["customer"]), "spent", order["value"])
-    worker_payment = round(order["value"] * 0.85, 1)  # Keeps one decimal place
-    update_wallet(str(order["worker"]), "wallet", float(worker_payment))  # Ensure it's stored as float
-    orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
+    # Extract customer ID and worker ID
+    customer_id = str(order["customer"])
+    worker_id = str(order["worker"])
     
-   # Get the Discord user for role checks
+    # Transfer funds
+    update_wallet(customer_id, "spent", order["value"])
+    worker_payment = round(order["value"] * 0.85, 1)  # Keeps one decimal place
+    update_wallet(worker_id, "wallet", float(worker_payment))  # Ensure it's stored as float
+    
+    # Mark order as completed
+    orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
+
+    # Get the Discord user for role checks
     guild = interaction.guild
     customer = guild.get_member(int(customer_id))  # Fetch customer from Discord server
 
