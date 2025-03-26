@@ -605,10 +605,6 @@ class ApplicationView(View):
 
         await interaction.followup.send("Applicant accepted and added to the order channel!", ephemeral=True)
 
-        # ✅ Disable buttons after action
-        self.disable_all_items()
-        await interaction.message.edit(view=self)
-
     @discord.ui.button(label="❌ Reject", style=discord.ButtonStyle.danger)
     async def reject_applicant(self, interaction: Interaction, button: discord.ui.Button):
         await interaction.response.defer()
@@ -619,11 +615,6 @@ class ApplicationView(View):
             await self.message_obj.delete()
         except:
             pass
-
-        # ✅ Disable buttons after rejection
-        self.disable_all_items()
-        await interaction.message.edit(view=self)
-
 
 
 
