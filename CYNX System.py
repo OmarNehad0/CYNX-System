@@ -281,54 +281,6 @@ async def check_and_assign_roles(user: discord.Member, spent_value: int, client)
             await congrats_channel.send(embed=embed)
 
 
-async def watch_wallet_updates(bot):
-    """
-    Watches MongoDB 'wallets' collection for changes.
-    If 'spent' field updates, triggers check_and_assign_roles().
-    """
-    pipeline = [{"$match": {"operationType": "update"}}]  # Only watch updates
-    change_stream = wallets_collection.watch(pipeline)
-
-    print("[DEBUG] MongoDB Watcher started...")
-
-    try:
-        async for change in change_stream:
-            try:
-                user_id = change["documentKey"]["user_id"]  # Get user ID
-                updated_fields = change["updateDescription"]["updatedFields"]
-
-                # Check if 'spent' value was modified
-                if "spent" in updated_fields:
-                    spent_value = updated_fields["spent"]
-                    
-                    # Fetch the Discord user from the bot
-                    guild = bot.get_guild(YOUR_GUILD_ID)  # Replace with your server ID
-                    user = guild.get_member(int(user_id))
-
-                    if user:
-                        print(f"[DEBUG] Spent updated for {user.display_name}: {spent_value}M")
-                        await check_and_assign_roles(user, spent_value, bot)
-                    else:
-                        print(f"[ERROR] User {user_id} not found in guild!")
-
-            except Exception as e:
-                print(f"[ERROR] Error processing MongoDB update: {e}")
-    except Exception as e:
-        print(f"[ERROR] MongoDB Watcher failed: {e}")
-
-async def start_mongo_watcher(bot):
-    """Runs the MongoDB watcher in the background."""
-    loop = asyncio.get_event_loop()
-    loop.create_task(watch_wallet_updates(bot))
-
-@bot.event
-async def on_ready():
-    print(f"✅ {bot.user} is now online!")
-    
-    # Start watching MongoDB for wallet updates
-    asyncio.create_task(start_mongo_watcher(bot))
-
-
 # /wallet_add_remove command
 @bot.tree.command(name="wallet_add_remove", description="Add or remove value from a user's wallet")
 @app_commands.choices(action=[
@@ -818,6 +770,9 @@ async def complete(interaction: Interaction, order_id: int):
     update_wallet(str(order["worker"]), "wallet", float(worker_payment))  # Ensure it's stored as float
     orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
     
+    # Check and assign roles for spending milestones
+    await check_and_assign_roles(user, spent_value, interaction.client)
+
     # Notify the original channel
     original_channel = bot.get_channel(order["original_channel_id"])
     if original_channel:
