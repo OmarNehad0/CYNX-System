@@ -805,7 +805,6 @@ async def complete(interaction: Interaction, order_id: int):
         dm_embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
         dm_embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
         dm_embed.add_field(name="📕 Description", value=order.get("description", "No description provided."), inline=False)
-        dm_embed.add_field(name="📌 Customer", value=f"<@{order['customer']}>", inline=True)
         dm_embed.add_field(name="🤑 Value", value=f"**```{order['value']}M```**", inline=True)
         dm_embed.add_field(name="👷‍♂️ Your Payment", value=f"**```{worker_payment}M```**", inline=True)
         dm_embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
