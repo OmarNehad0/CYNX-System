@@ -555,7 +555,7 @@ class ApplicationView(View):
             await sent_message.pin()
 
             # ✅ Notify customer and worker
-            claim_message = f"**Hello! <@{self.customer_id}>, <@{self.applicant_id}> is Assigned To Be Your Worker For This Job. You Can Provide Your Account Info Using This Command `!inf`**"
+            claim_message = f"**Hello! <@{self.customer_id}>, <@{self.applicant_id}> is Assigned To Be Your Worker For This Job. You Can Provide Your Account Info Using This Command `/inf`**"
             await original_channel.send(claim_message)
 
         # ✅ Delete the original job post
