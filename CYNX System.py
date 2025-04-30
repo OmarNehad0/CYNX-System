@@ -540,7 +540,7 @@ class ApplicationView(View):
                 return
 
             # ✅ Corrected embed with actual order details
-            embed = discord.Embed(title="🎡 Order Claimed", color=discord.Color.from_rgb(139, 0, 0))
+            embed = discord.Embed(title="👷‍♂️ Order Claimed", color=discord.Color.from_rgb(139, 0, 0))
             embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
             embed.set_author(name="✅ Cynx System ✅", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
             embed.add_field(name="📕 Description", value=description, inline=False)
@@ -629,9 +629,10 @@ def get_next_order_id():
     deposit_required="The deposit required for the order",
     holder="The holder of the order",
     channel="The channel to post the order (mention or ID)",
-    description="Description of the order"
+    description="Description of the order",
+    image="Image URL to show at the bottom of the embed"
 )
-async def post(interaction: discord.Interaction, customer: discord.Member, value: int, deposit_required: int, holder: discord.Member, channel: discord.TextChannel, description: str):
+async def post(interaction: discord.Interaction, customer: discord.Member, value: int, deposit_required: int, holder: discord.Member, channel: discord.TextChannel, description: str, image: str = None):
     if not has_permission(interaction.user):
         await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
         return
@@ -658,11 +659,14 @@ async def post(interaction: discord.Interaction, customer: discord.Member, value
     embed = discord.Embed(title="<:wolf:1261406634802941994> New Order <:wolf:1261406634802941994>", color=discord.Color.from_rgb(139, 0, 0))
     embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
     embed.set_author(name="💼 Order Posted", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
-    embed.add_field(name="📕 Description", value=description, inline=False)
+    embed.description = f"📕 {description}"
     embed.add_field(name="💰 Value", value=f"**```{value}M```**", inline=True)
     embed.add_field(name="💵 Deposit Required", value=f"**```{deposit_required}M```**", inline=True)
     embed.add_field(name="🕵️‍♂️ Holder", value=holder.mention, inline=True)
-    embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
+    if image:
+        embed.set_image(url=image)
+    else:
+        embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
     embed.set_footer(text=f"Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
 
     channel_to_post = interaction.guild.get_channel(channel_id)
@@ -698,53 +702,64 @@ async def post(interaction: discord.Interaction, customer: discord.Member, value
         await interaction.response.send_message("Invalid channel specified.", ephemeral=True)
 
 @bot.tree.command(name="set", description="Set an order directly with worker.")
-async def set_order(interaction: Interaction, customer: discord.Member, value: int, deposit_required: int, holder: discord.Member, description: str, worker: discord.Member):
+@app_commands.describe(
+    customer="The customer for the order",
+    value="The value of the order (in millions)",
+    deposit_required="The deposit required for the order",
+    holder="The holder of the order",
+    description="Description of the order",
+    worker="The worker to assign",
+    image="Optional image URL to show at the bottom of the embed"
+)
+async def set_order(interaction: Interaction, customer: discord.Member, value: int, deposit_required: int, holder: discord.Member, description: str, worker: discord.Member, image: str = None):
     if not has_permission(interaction.user):
         await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
         return
-    order_id = get_next_order_id()  # Get a unique order ID
-    original_channel_id = interaction.channel.id  # Save the original posting channel
-    
+    order_id = get_next_order_id()
+    original_channel_id = interaction.channel.id
+
     embed = Embed(title="Order Set", color=discord.Color.from_rgb(139, 0, 0))
     embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
     embed.set_author(name="🛠️ Order Set", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
-    embed.add_field(name="📕 Description", value=description, inline=False)
+    embed.description = f"📕 {description}"
     embed.add_field(name="📌 Customer", value=customer.mention, inline=True)
-    embed.add_field(name="🤑 Value", value=f"**```{value}M```**", inline=True)
+    embed.add_field(name="💰 Value", value=f"**```{value}M```**", inline=True)
     embed.add_field(name="💵 Deposit Required", value=f"**```{deposit_required}M```**", inline=True)
     embed.add_field(name="🕵️‍♂️ Holder", value=holder.mention, inline=True)
     embed.add_field(name="👷 Worker", value=worker.mention, inline=True)
-    embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
-    embed.set_footer(text=f"Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
-    
-    # Send the order to the channel where the command was used
+
+    if image:
+        embed.set_image(url=image)
+    else:
+        embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
+
+    embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
+
     original_channel = bot.get_channel(original_channel_id)
     if original_channel:
-        message = await original_channel.send(embed=embed)  # Send the message to the original channel
-        message_id = message.id  # Retrieve the message ID
-    
-    # Store order in the database, including the original channel where the order was posted
+        message = await original_channel.send(embed=embed)
+        message_id = message.id
+        await message.pin()
+
     orders_collection.insert_one({
-        "_id": order_id,  # Use unique order ID
+        "_id": order_id,
         "customer": customer.id,
-        "worker": worker.id,  # Directly assign worker
+        "worker": worker.id,
         "value": value,
         "deposit_required": deposit_required,
         "holder": holder.id,
         "message_id": message_id,
-        "channel_id": original_channel.id,  # Store the original channel ID
-        "original_channel_id": original_channel_id,  # Store the original channel ID
-        "description": description
+        "channel_id": original_channel.id,
+        "original_channel_id": original_channel_id,
+        "description": description,
+        "image": image  # Store image in database
     })
 
-    # Notify the user that the order was successfully set
     await interaction.response.send_message(f"Order set with Worker {worker.mention}!", ephemeral=True)
     await log_command(interaction, "Order Set", f"Customer: {customer.mention} (`{customer.id}`)\nWorker: {worker.mention} (`{worker.id}`)\nValue: {value:,}M\nDeposit Required: {deposit_required:,}M\nHolder: {holder.mention} (`{holder.id}`)\nDescription: {description}")
 
-    # Now, add the worker to the original channel and grant permissions
     if original_channel:
         try:
-            # Add the worker to the channel, allowing them to read and send messages
             await original_channel.set_permissions(worker, read_messages=True, send_messages=True)
             print(f"Permissions granted to {worker.name} in {original_channel.name}.")
         except Exception as e:
@@ -792,10 +807,10 @@ async def complete(interaction: Interaction, order_id: int):
         embed.add_field(name="📕 Description", value=order.get("description", "No description provided."), inline=False)
         embed.add_field(name="👷 Worker", value=f"<@{order['worker']}>", inline=True)
         embed.add_field(name="📌 Customer", value=f"<@{order['customer']}>", inline=True)
-        embed.add_field(name="🤑 Value", value=f"**```{order['value']}M```**", inline=True)
+        embed.add_field(name="💰 Value", value=f"**```{order['value']}M```**", inline=True)
         embed.add_field(name="👷‍♂️ Worker Payment", value=f"**```{worker_payment}M```**", inline=True)
         embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
-        embed.set_footer(text=f"Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
+        embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
         await original_channel.send(embed=embed)
     
     # DM the worker
@@ -805,10 +820,10 @@ async def complete(interaction: Interaction, order_id: int):
         dm_embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
         dm_embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
         dm_embed.add_field(name="📕 Description", value=order.get("description", "No description provided."), inline=False)
-        dm_embed.add_field(name="🤑 Value", value=f"**```{order['value']}M```**", inline=True)
+        dm_embed.add_field(name="💰 Value", value=f"**```{order['value']}M```**", inline=True)
         dm_embed.add_field(name="👷‍♂️ Your Payment", value=f"**```{worker_payment}M```**", inline=True)
         dm_embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
-        dm_embed.set_footer(text=f"Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
+        dm_embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
         await worker.send(embed=dm_embed)
     
     await interaction.response.send_message("Order marked as completed!", ephemeral=True)
