@@ -721,7 +721,7 @@ async def set_order(interaction: Interaction, customer: discord.Member, value: i
     embed = Embed(title="Order Set", color=discord.Color.from_rgb(139, 0, 0))
     embed.set_thumbnail(url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
     embed.set_author(name="🛠️ Order Set", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&=")
-    embed.description = f"📕 {description}"
+    embed.description = f"📕**Description**:\n {description}"
     embed.add_field(name="📌 Customer", value=customer.mention, inline=True)
     embed.add_field(name="💰 Value", value=f"**```{value}M```**", inline=True)
     embed.add_field(name="💵 Deposit Required", value=f"**```{deposit_required}M```**", inline=True)
