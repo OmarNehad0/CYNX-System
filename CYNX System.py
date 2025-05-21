@@ -34,7 +34,7 @@ import pymongo
 import gspread
 from discord import Embed, Interaction
 from pymongo import MongoClient, ReturnDocument
-
+from collections import defaultdict
 logging.basicConfig(level=logging.INFO)
 
 bumper_task = None  # Ensure bumper_task is globally defined
@@ -45,6 +45,91 @@ intents.members = True  # For member join tracking
 intents.message_content = True  # Required for prefix commands
 
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+
+# In-memory RSN tracking
+subscriptions = defaultdict(set)
+# Key: RSN (lowercase), Value: Set of channel IDs
+rsn_subscriptions = defaultdict(set)
+# Replace this with your actual Dink webhook channel ID
+DINK_CHANNEL_ID = 1374820955330969691  # <-- REPLACE THIS
+
+# ==== Slash Commands ====
+
+@bot.tree.command(name="track_rsn", description="Subscribe this channel to a specific RSN.")
+@app_commands.describe(rsn="The RSN to track.")
+async def track_rsn(interaction: discord.Interaction, rsn: str):
+    rsn_key = rsn.lower()
+    channel_id = interaction.channel_id
+    rsn_subscriptions[rsn_key].add(channel_id)
+    await interaction.response.send_message(f"✅ This channel is now tracking RSN: `{rsn}`.", ephemeral=True)
+
+@bot.tree.command(name="untrack_rsn", description="Unsubscribe this channel from a specific RSN.")
+@app_commands.describe(rsn="The RSN to stop tracking.")
+async def untrack_rsn(interaction: discord.Interaction, rsn: str):
+    rsn_key = rsn.lower()
+    channel_id = interaction.channel_id
+    if channel_id in rsn_subscriptions.get(rsn_key, set()):
+        rsn_subscriptions[rsn_key].remove(channel_id)
+        await interaction.response.send_message(f"🛑 This channel has stopped tracking RSN: `{rsn}`.", ephemeral=True)
+    else:
+        await interaction.response.send_message(f"⚠️ This channel was not tracking RSN: `{rsn}`.", ephemeral=True)
+
+@bot.tree.command(name="list_tracked_rsns", description="List all RSNs this channel is tracking.")
+async def list_tracked_rsns(interaction: discord.Interaction):
+    channel_id = interaction.channel_id
+    tracked = [rsn for rsn, channels in rsn_subscriptions.items() if channel_id in channels]
+    if tracked:
+        rsn_list = ', '.join(tracked)
+        await interaction.response.send_message(f"📄 This channel is tracking the following RSNs: {rsn_list}", ephemeral=True)
+    else:
+        await interaction.response.send_message("📄 This channel is not tracking any RSNs.", ephemeral=True)
+
+@bot.event
+async def on_message(message: discord.Message):
+    await bot.process_commands(message)  # Ensure commands still work
+
+    # Replace with your actual Dink channel ID
+    DINK_CHANNEL_ID = 1374820955330969691
+
+    if message.channel.id != DINK_CHANNEL_ID:
+        return
+
+    # Ignore messages from bots that are not webhooks
+    if message.author.bot and message.webhook_id is None:
+        return
+
+    # Compile the message content and embed texts
+    content = (message.content or "").lower()
+    for embed in message.embeds:
+        if embed.title:
+            content += f" {embed.title.lower()}"
+        if embed.description:
+            content += f" {embed.description.lower()}"
+        if embed.footer and embed.footer.text:
+            content += f" {embed.footer.text.lower()}"
+        if embed.author and embed.author.name:
+            content += f" {embed.author.name.lower()}"
+        for field in embed.fields:
+            content += f" {field.name.lower()} {field.value.lower()}"
+
+    # Check for RSN matches and forward messages
+    for rsn, channels in rsn_subscriptions.items():
+        if rsn in content:
+            for channel_id in channels:
+                try:
+                    target_channel = await bot.fetch_channel(channel_id)
+                    if message.embeds:
+                        for embed in message.embeds:
+                            await target_channel.send(embed=embed)
+                    if message.attachments:
+                        for attachment in message.attachments:
+                            if attachment.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                                await target_channel.send(attachment.url)
+                except Exception as e:
+                    print(f"Error forwarding message to channel {channel_id}: {e}")
+            break  # Stop after the first matching RSN
+
 
 # Connect to MongoDB using the provided URI from Railway
 mongo_uri = os.getenv("MONGO_URI")  # You should set this in your Railway environment variables
