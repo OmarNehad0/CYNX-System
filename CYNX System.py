@@ -935,10 +935,9 @@ async def complete(interaction: Interaction, order_id: int):
         helper_embed.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         helper_embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         helper_embed.add_field(name="📜 Order ID", value=f"`{order_id}`", inline=True)
-        helper_embed.add_field(name="📌 Customer", value=f"<@{order['customer']}>", inline=True)
         helper_embed.add_field(name="💰 Order Value", value=f"**```{order['value']}M```**", inline=True)
         helper_embed.add_field(name="🎁 Your Share", value=f"**```{helper_payment}M```**", inline=True)
-        helper_embed.set_footer(text=f"Helper: <@{helper_id}>", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
+        helper_embed.set_footer(text=f"Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         try:
             await helper_channel.send(f"<@{helper_id}>", embed=helper_embed)
         except Exception as e:
