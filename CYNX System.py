@@ -860,17 +860,27 @@ async def complete(interaction: Interaction, order_id: int):
     if not order:
         await interaction.response.send_message("❌ Order not found!", ephemeral=True)
         return
+    
+    if order.get("status") == "completed":
+        await interaction.response.send_message("⚠️ This order has already been marked as completed.", ephemeral=True)
+        return
 
     # Extract customer ID and worker ID
     customer_id = str(order["customer"])
     worker_id = str(order["worker"])
     
     # Transfer funds
-    update_wallet(customer_id, "spent", order["value"])
-    worker_payment = round(order["value"] * 0.85, 1)  # Keeps one decimal place
-    update_wallet(worker_id, "wallet", float(worker_payment))  # Ensure it's stored as float
+    update_wallet(str(order["customer"]), "spent", order["value"])
     
-    # Mark order as completed
+    total_value = order["value"]
+    worker_payment = round(total_value * 0.85, 1)
+    commission_value = round(total_value * 0.10, 1)
+    helper_payment = round(total_value * 0.05, 1)
+
+    update_wallet(str(order["worker"]), "wallet", float(worker_payment))
+    update_wallet("server", "commission", float(commission_value))
+    update_wallet(str(order.get("posted_by", interaction.user.id)), "wallet", float(helper_payment))
+
     orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
 
     # Get the Discord user for role checks
@@ -894,6 +904,8 @@ async def complete(interaction: Interaction, order_id: int):
         embed.add_field(name="📌 Customer", value=f"<@{order['customer']}>", inline=True)
         embed.add_field(name="💰 Value", value=f"**```{order['value']}M```**", inline=True)
         embed.add_field(name="👷‍♂️ Worker Payment", value=f"**```{worker_payment}M```**", inline=True)
+        embed.add_field(name="📦 Server Commission", value=f"**```{commission_value}M```**", inline=True)
+        embed.add_field(name="📬 Helper Reward", value=f"**```{helper_payment}M```**", inline=True)
         embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
         embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")
         await original_channel.send(embed=embed)
@@ -915,7 +927,13 @@ async def complete(interaction: Interaction, order_id: int):
             print(f"[WARNING] Could not DM worker {worker.id}. DMs may be closed.")
     
     await interaction.response.send_message("Order marked as completed!", ephemeral=True)
-    await log_command(interaction, "Order Completed", f"Order ID: {order_id}\nMarked by: {interaction.user.mention} (`{interaction.user.id}`)\nWorker: <@{order['worker']}> (`{order['worker']}`)\nCustomer: <@{order['customer']}> (`{order['customer']}`)\nValue: {order['value']}M\nWorker Payment: {worker_payment}M")
+    await log_command(interaction, "Order Completed", (
+        f"Order ID: {order_id}\nMarked by: {interaction.user.mention} (`{interaction.user.id}`)\n"
+        f"Worker: <@{order['worker']}> (`{order['worker']}`)\n"
+        f"Customer: <@{order['customer']}> (`{order['customer']}`)\n"
+        f"Value: {total_value}M\nWorker Payment: {worker_payment}M\n"
+        f"Server Commission: {commission_value}M\nHelper Reward: {helper_payment}M"
+     ))
 
 # 📌 /order_deletion command
 @bot.tree.command(name="order_deletion", description="Delete an order.")
