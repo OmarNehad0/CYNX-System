@@ -925,7 +925,25 @@ async def complete(interaction: Interaction, order_id: int):
             await worker.send(embed=dm_embed)
         except discord.Forbidden:
             print(f"[WARNING] Could not DM worker {worker.id}. DMs may be closed.")
-    
+
+    # Notify the helper in a specific channel
+    helper_id = str(order.get("posted_by", interaction.user.id))
+    helper_channel = bot.get_channel(1395073687199416411)
+
+    if helper_channel:
+        helper_embed = Embed(title="🎯 Helper Commission Summary", color=discord.Color.gold())
+        helper_embed.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
+        helper_embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
+        helper_embed.add_field(name="📜 Order ID", value=f"`{order_id}`", inline=True)
+        helper_embed.add_field(name="📌 Customer", value=f"<@{order['customer']}>", inline=True)
+        helper_embed.add_field(name="💰 Order Value", value=f"**```{order['value']}M```**", inline=True)
+        helper_embed.add_field(name="🎁 Your Share", value=f"**```{helper_payment}M```**", inline=True)
+        helper_embed.set_footer(text=f"Helper: <@{helper_id}>", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
+        try:
+            await helper_channel.send(f"<@{helper_id}>", embed=helper_embed)
+        except Exception as e:
+            print(f"[ERROR] Failed to send helper embed: {e}")
+
     await interaction.response.send_message("Order marked as completed!", ephemeral=True)
     await log_command(interaction, "Order Completed", (
         f"Order ID: {order_id}\nMarked by: {interaction.user.mention} (`{interaction.user.id}`)\n"
