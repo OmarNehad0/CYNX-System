@@ -918,8 +918,7 @@ async def complete(interaction: Interaction, order_id: int):
                 "__Please do the following immediately:__\n"
                 "• **Change your account password**\n"
                 "• **End All Sessions**\n"
-                "• **Change your bank PIN** (Optional)\n\n"
-                "**Then reply and confirm that you've updated your info.**"
+                "• **Change your bank PIN** (Optional)\n"
             ),
             color=discord.Color.gold()
         )
