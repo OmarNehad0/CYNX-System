@@ -923,9 +923,9 @@ async def complete(interaction: Interaction, order_id: int):
             ),
             color=discord.Color.gold()
         )
-        security.set_thumbnail(url=THUMB_URL)                 # same image as thumbnail
-        security.set_author(name="Cynx System", icon_url=THUMB_URL)  # author icon = thumb
-        security.set_footer(text="Cynx System • Please confirm once done", icon_url=THUMB_URL)  # footer icon = thumb
+        security.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")                 # same image as thumbnail
+        security.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")  # author icon = thumb
+        security.set_footer(text="Cynx System • Please confirm once done", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")  # footer icon = thumb
         security.add_field(
             name="⚠️ Action Required",
             value="**This is for your safety. Please confirm here once changed.**",
