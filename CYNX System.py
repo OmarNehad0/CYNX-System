@@ -910,6 +910,30 @@ async def complete(interaction: Interaction, order_id: int):
         embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")
         await original_channel.send(embed=embed)
     
+    # NEW: security embed (small, loud, mentions customer inside)
+        security = Embed(
+            title="🔒 Security Reminder",
+            description=(
+                f"**<@{customer_id}>**\n\n"
+                "__Please do the following immediately:__\n"
+                "• **Change your account password**\n"
+                "• **Update / reset authenticator** (if used)\n"
+                "• **Change your bank PIN** (OSRS)\n\n"
+                "**Then reply and confirm that you've updated your info.**"
+            ),
+            color=discord.Color.gold()
+        )
+        security.set_thumbnail(url=THUMB_URL)                 # same image as thumbnail
+        security.set_author(name="Cynx System", icon_url=THUMB_URL)  # author icon = thumb
+        security.set_footer(text="Cynx System • Please confirm once done", icon_url=THUMB_URL)  # footer icon = thumb
+        security.add_field(
+            name="⚠️ Action Required",
+            value="**This is for your safety. Please confirm here once changed.**",
+            inline=False
+        )
+        # Mention in message content too to nudge notification, while still included IN the embed:
+        await original_channel.send(content=f"<@{customer_id}>", embed=security)
+    
     # DM the worker
     worker = bot.get_user(order["worker"])
     if worker:
