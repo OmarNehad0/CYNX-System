@@ -974,6 +974,60 @@ async def complete(interaction: Interaction, order_id: int):
         f"Value: {total_value}M\nWorker Payment: {worker_payment}M\n"
         f"Server Commission: {commission_value}M\nHelper Reward: {helper_payment}M"
      ))
+@bot.tree.command(name="summary", description="Show users with wallet balances and ongoing orders.")
+async def summary(interaction: discord.Interaction):
+    if not has_permission(interaction.user):
+        await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
+        return
+
+    # === Wallet Overview ===
+    wallets = list(wallets_collection.find({
+        "$or": [
+            {"wallet": {"$gt": 0}},
+            {"deposit": {"$gt": 0}}
+        ]
+    }))
+
+    wallet_summary = ""
+    for w in wallets:
+        user_id = w.get("user_id", "Unknown")
+        wallet_amount = w.get("wallet", 0)
+        deposit_amount = w.get("deposit", 0)
+        spent_amount = w.get("spent", 0)
+        wallet_summary += f"<@{user_id}> → 💵 **{wallet_amount}M** | 🏦 Deposit: **{deposit_amount}M** | 🎃 Spent: **{spent_amount}M**\n"
+
+    if not wallet_summary:
+        wallet_summary = "_No users have money in their wallet or deposit._"
+
+    # === Orders Overview ===
+    in_progress_orders = list(orders_collection.find({
+        "$or": [
+            {"status": {"$in": ["in_progress", "claimed"]}},
+            {"completed": {"$ne": True}}
+        ]
+    }))
+
+    order_summary = ""
+    for o in in_progress_orders:
+        order_id = o.get("_id", "N/A")
+        worker = o.get("worker")
+        customer = o.get("customer")
+        order_summary += f"🆔 **Order {order_id}** → 👷 {f'<@{worker}>' if worker else 'Unassigned'} | 👤 {f'<@{customer}>' if customer else 'Unknown'}\n"
+
+    if not order_summary:
+        order_summary = "_No ongoing orders found._"
+
+    # === Create Embed ===
+    embed = discord.Embed(
+        title="📊 System Summary",
+        description="Overview of wallet balances and active orders",
+        color=discord.Color.from_rgb(139, 0, 0)
+    )
+    embed.add_field(name="💰 Users With Wallets", value=wallet_summary[:1024], inline=False)
+    embed.add_field(name="📦 Orders In Progress", value=order_summary[:1024], inline=False)
+    embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
+
+    await interaction.response.send_message(embed=embed)
 
 # 📌 /order_deletion command
 @bot.tree.command(name="order_deletion", description="Delete an order.")
