@@ -815,7 +815,6 @@ def get_next_order_id():
     description="Description of the order",
     image="Image URL to show at the bottom of the embed"
 )
-@bot.tree.command(name="post", description="Post a new order")
 async def post(
     interaction: discord.Interaction,
     customer: discord.Member,
@@ -926,7 +925,7 @@ async def post(
         await interaction.response.send_message("❌ Invalid channel specified.", ephemeral=True)
 
 
-@bot.tree.command(name="set2", description="Set an order directly with worker (USD only).")
+@bot.tree.command(name="set", description="Set an order directly with worker (USD only).")
 async def set_order(
     interaction: Interaction,
     customer: discord.Member,
