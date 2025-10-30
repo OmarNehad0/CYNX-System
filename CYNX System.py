@@ -926,7 +926,6 @@ async def post(
         await interaction.channel.send(embed=confirmation_embed)
 
         await interaction.response.send_message("💵 Order posted successfully in USD!", ephemeral=True)
-
         # Log the command
         await log_command(
             interaction,
@@ -940,7 +939,7 @@ async def post(
         )
     else:
         await interaction.response.send_message("❌ Invalid channel specified.", ephemeral=True)
-
+    
 
 @bot.tree.command(name="set", description="Set an order directly with worker (USD only).")
 async def set_order(
@@ -1165,13 +1164,18 @@ async def complete(interaction: Interaction, order_id: int):
             print(f"[ERROR] Failed to send helper embed: {e}")
             
     await interaction.response.send_message("✅ Order marked as completed successfully!", ephemeral=True)
-    await log_command(interaction, "Order Completed", (
-        f"Order ID: {order_id}\nMarked by: {interaction.user.mention} (`{interaction.user.id}`)\n"
-        f"Worker: <@{order['worker']}> (`{order['worker']}`)\n"
-        f"Customer: <@{order['customer']}> (`{order['customer']}`)\n"
-        f"Value: {total_value}$\nWorker Payment: {worker_payment}$\n"
-        f"Server Commission: {commission_value}$\nHelper Reward: {helper_payment}$"
-     ))
+    await log_command(
+        interaction,
+        "Order Completed",
+        f"📦 **Order ID:** `{order_id}`\n"
+        f"👷 **Worker:** <@{worker_id}>\n"
+        f"💰 **Value:** ${total_value:,.2f}\n"
+        f"💸 **Worker 80%:** ${worker_payment:,.2f}\n"
+        f"💼 **Commission 17%:** ${commission_total:,.2f}\n"
+        f"🎁 **Helper 3%:** ${helper_payment:,.2f}\n"
+        f"🧾 **Posted By:** <@{helper_id}>"
+    )
+
 @bot.tree.command(name="commission", description="Add or remove funds from a user's commission wallet ($ only).")
 @app_commands.describe(
     user="The user to modify commission for.",
