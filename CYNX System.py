@@ -1130,7 +1130,90 @@ async def complete(interaction: Interaction, order_id: int):
         security.set_footer(text="Cynx System • Please confirm once done", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         security.add_field(name="⚠️ Action Required", value="**This is for your safety. Please confirm here once changed.**", inline=False)
         await original_channel.send(content=f"<@{customer_id}>", embed=security)
+        # 📬 Send Feedback Embed Here
+        # =============================
+        class FeedbackView(View):
+            def __init__(self):
+                super().__init__(timeout=None)
+                for stars in range(1, 6):
+                    self.add_item(Button(
+                        label=f"{stars}",
+                        custom_id=str(stars),
+                        emoji="<:christmas_star:1262138383963259031>",
+                        style=discord.ButtonStyle.primary
+                    ))
+                # Sythe button
+                self.add_item(Button(
+                    label="Vouch For Us On Sythe!. (2% CashBack)",
+                    url="https://www.sythe.org/threads/www-sythe-org-threads-cynx-osrs-service-vouch-thread/page-6#post-85913828",
+                    style=discord.ButtonStyle.url,
+                    emoji=discord.PartialEmoji(name="sytheicon", id=1332330797998280724)
+                ))
+                # Trustpilot button
+                self.add_item(Button(
+                    label="Review Us On Trustpilot! (2% CashBack)",
+                    url="https://www.trustpilot.com/evaluate/cynxosrs.com",
+                    style=discord.ButtonStyle.url,
+                    emoji=discord.PartialEmoji(name="trustpilot", id=1380538473873670184),
+                    row=2
+                ))
 
+            async def button_callback(self, interaction: Interaction):
+                stars = int(interaction.data["custom_id"])
+                await interaction.response.send_modal(FeedbackModal(stars))
+
+        class FeedbackModal(Modal):
+            def __init__(self, stars):
+                super().__init__(title="Service Feedback")
+                self.stars = stars
+                self.add_item(TextInput(label="We Appreciate A Detailed Review!", placeholder="Describe your service experience...", required=True))
+
+            async def on_submit(self, interaction: Interaction):
+                review = self.children[0].value
+                stars_text = "<:christmas_star:1262138383963259031>" * self.stars
+
+                embed = Embed(
+                    title="🌟 Cynx Vouches! 🌟",
+                    color=discord.Color.from_rgb(200, 0, 0),
+                    description=(
+                        f"**Date:** `{interaction.created_at.strftime('%B %d, %Y')}`\n"
+                        f"**Discord User:** `{interaction.user.name}`\n\n"
+                        f"**Rating:** {stars_text}\n"
+                        f"**Vouch:**\n{review}"
+                    )
+                )
+                embed.set_author(name=f"{interaction.user.name} left a vouch!", icon_url=interaction.user.display_avatar.url)
+                embed.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
+                embed.set_footer(text="Thank you for your feedback!", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
+
+                feedback_channel = bot.get_channel(FEEDBACK_CHANNEL_ID)
+                if feedback_channel:
+                    await feedback_channel.send(embed=embed)
+                    await interaction.response.send_message("✅ Thank you for your feedback!", ephemeral=True)
+                else:
+                    await interaction.response.send_message("⚠️ Feedback channel not found!", ephemeral=True)
+
+        feedback_embed = Embed(
+            title="📝 Vouch For Us!",
+            color=discord.Color.from_rgb(200, 0, 0),
+            description=(
+                "**<:wolf:1261406634802941994> We Appreciate Your Vouch on [Sythe](https://www.sythe.org/threads/www-sythe-org-threads-cynx-osrs-service-vouch-thread/page-6#post-85913828).**\n"
+                "✨ **Get a +10% Discount** When You Vouch.\n"
+                "<a:1184850417100804216:1210704452185620512> **Check Discounts Here.** <#1319266483397853195> \n\n"
+                "**Please select your rating below (1–5 stars).**\n"
+                "Once Selected, You Will Be Asked To Leave A Review."
+            )
+        )
+        feedback_embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
+        feedback_embed.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
+        feedback_embed.set_footer(text="Cynx Services", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
+
+        view = FeedbackView()
+        for button in view.children:
+            if isinstance(button, Button):
+                button.callback = view.button_callback
+
+        await original_channel.send(embed=feedback_embed, view=view)
     # DM worker confirmation
     worker = bot.get_user(order["worker"])
     if worker:
@@ -1171,8 +1254,8 @@ async def complete(interaction: Interaction, order_id: int):
         f"👷 **Worker:** <@{worker_id}>\n"
         f"💰 **Value:** ${total_value:,.2f}\n"
         f"💸 **Worker 80%:** ${worker_payment:,.2f}\n"
-        f"💼 **Commission 17%:** ${commission_total:,.2f}\n"
-        f"🎁 **Helper 3%:** ${helper_payment:,.2f}\n"
+        f"💼 **Commission 15%:** ${commission_total:,.2f}\n"
+        f"🎁 **Helper 5%:** ${helper_payment:,.2f}\n"
         f"🧾 **Posted By:** <@{helper_id}>"
     )
 
