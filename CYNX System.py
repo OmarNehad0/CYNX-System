@@ -254,6 +254,7 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
     spent_value = wallet_data.get('spent', 0)
     wallet_dollars = wallet_data.get('wallet_dollars', 0)
     spent_dollars = wallet_data.get('spent_dollars', 0)
+    deposit_dollars = wallet_data.get('deposit_dollars', 0)
 
     # Get user's avatar (fallback to default image)
     default_thumbnail = "https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&="
@@ -267,7 +268,11 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
         value=f"```🤑 {wallet_value}M | ${wallet_dollars}```",
         inline=False
     )
-    embed.add_field(name="<:70023pepepresident:1321482641475637349> Deposit", value=f"```💵 {deposit_value}M```", inline=False)
+    embed.add_field(
+    name="<:70023pepepresident:1321482641475637349> Deposit",
+    value=f"```💵 {deposit_value}M | ${deposit_dollars}```",
+    inline=False
+    )
     embed.add_field(
         name="<:wolf:1261406634802941994> Spent",
         value=f"```🎃 {spent_value}M | ${spent_dollars}```",
