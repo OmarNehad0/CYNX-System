@@ -916,7 +916,8 @@ async def post(
             "channel_id": channel.id,
             "original_channel_id": post_channel_id,
             "description": description,
-            "currency": "$"
+            "currency": "$",
+            "posted_by": interaction.user.id  # ✅ added this
         })
 
         # Confirmation message
@@ -1013,7 +1014,8 @@ async def set_order(
         "original_channel_id": original_channel_id,
         "description": description,
         "status": "in_progress",
-        "currency": "$"
+        "currency": "$",
+        "posted_by": interaction.user.id  # ✅ added this
     })
 
     # تحديث المحافظ بالدولار فقط
@@ -1067,8 +1069,8 @@ async def complete(interaction: Interaction, order_id: int):
 
     total_value = order["value"]
     worker_payment = round(total_value * 0.80, 2)
-    commission_total = round(total_value * 0.17, 2)
-    helper_payment = round(total_value * 0.03, 2)
+    commission_total = round(total_value * 0.15, 2)
+    helper_payment = round(total_value * 0.05, 2)
 
     # Split commission between two owners
     owner1_id = "944654043878400120"
@@ -1078,7 +1080,12 @@ async def complete(interaction: Interaction, order_id: int):
     update_wallet(worker_id, "wallet_dollars", float(worker_payment), "$")
     update_wallet(owner1_id, "commission_dollars", float(commission_split), "$")
     update_wallet(owner2_id, "commission_dollars", float(commission_split), "$")
-    update_wallet(str(order.get("posted_by", interaction.user.id)), "wallet_dollars", float(helper_payment), "$")
+    helper_id = str(order.get("posted_by"))
+    if helper_id:
+        update_wallet(helper_id, "wallet_dollars", float(helper_payment), "$")
+    else:
+        print(f"[WARNING] Order {order_id} has no 'posted_by' — helper payment skipped.")
+
 
     # Mark order completed
     orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
@@ -1149,8 +1156,8 @@ async def complete(interaction: Interaction, order_id: int):
         helper_embed.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         helper_embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         helper_embed.add_field(name="📜 Order ID", value=f"`{order_id}`", inline=True)
-        helper_embed.add_field(name="💰 Order Value", value=f"**```{order['value']}M```**", inline=True)
-        helper_embed.add_field(name="🎁 Your Share", value=f"**```{helper_payment}M```**", inline=True)
+        helper_embed.add_field(name="💰 Order Value", value=f"**```{order['value']}$```**", inline=True)
+        helper_embed.add_field(name="🎁 Your Share", value=f"**```{helper_payment}$```**", inline=True)
         helper_embed.set_footer(text=f"Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         try:
             await helper_channel.send(f"<@{helper_id}>", embed=helper_embed)
@@ -1162,8 +1169,8 @@ async def complete(interaction: Interaction, order_id: int):
         f"Order ID: {order_id}\nMarked by: {interaction.user.mention} (`{interaction.user.id}`)\n"
         f"Worker: <@{order['worker']}> (`{order['worker']}`)\n"
         f"Customer: <@{order['customer']}> (`{order['customer']}`)\n"
-        f"Value: {total_value}M\nWorker Payment: {worker_payment}M\n"
-        f"Server Commission: {commission_value}M\nHelper Reward: {helper_payment}M"
+        f"Value: {total_value}$\nWorker Payment: {worker_payment}$\n"
+        f"Server Commission: {commission_value}$\nHelper Reward: {helper_payment}$"
      ))
 @bot.tree.command(name="commission", description="Add or remove funds from a user's commission wallet ($ only).")
 @app_commands.describe(
