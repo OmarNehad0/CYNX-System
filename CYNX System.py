@@ -259,15 +259,7 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
     # Get user's avatar (fallback to default image)
     default_thumbnail = "https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&="
     thumbnail_url = user.avatar.url if user.avatar else default_thumbnail
-    # Only show commission wallet for these two owners
-    owner_ids = {"944654043878400120", "617160222573592589"}
-    if user_id in owner_ids:
-        commission_dollars = wallet_data.get('commission_dollars', 0)
-        embed.add_field(
-            name="🏦 Commission Wallet",
-            value=f"💼 ${commission_dollars}",
-            inline=False
-        )
+    
 
     # Create embed message
     embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.from_rgb(139, 0, 0))
@@ -287,6 +279,15 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
         value=f"```🎃 {spent_value}M | ${spent_dollars}```",
         inline=False
     )
+    # Only show commission wallet for these two owners
+    owner_ids = {"944654043878400120", "617160222573592589"}
+    if user_id in owner_ids:
+        commission_dollars = wallet_data.get('commission_dollars', 0)
+        embed.add_field(
+            name="🏦 Commission Wallet",
+            value=f"💼 ${commission_dollars}",
+            inline=False
+        )
     embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
 
     # Ensure requester avatar exists
