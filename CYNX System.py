@@ -1221,7 +1221,7 @@ async def commission(interaction: discord.Interaction, user: discord.User, actio
     embed.add_field(name="New Balance", value=f"${new_balance:,.2f}", inline=True)
     embed.set_thumbnail(url=user.display_avatar.url)
     embed.set_footer(
-        text=f"Action by {interaction.user} • {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        text=f"Action by {interaction.user} • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     )
 
     await interaction.response.send_message(embed=embed)
