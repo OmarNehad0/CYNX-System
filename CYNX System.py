@@ -653,9 +653,10 @@ class OrderButton(View):
             return
 
         user_wallet = get_wallet(str(interaction.user.id))
-        if user_wallet.get("deposit", 0) < self.deposit_required:
-            await interaction.response.send_message("You do not have enough deposit to claim this order!", ephemeral=True)
+        if user_wallet.get("deposit_dollars", 0) < self.deposit_required:
+            await interaction.response.send_message("You do not have enough $ deposit to claim this order!", ephemeral=True)
             return
+
 
         # ✅ Send application notification and store the message object
         bot_spam_channel = bot.get_channel(1345349082608041996)
@@ -729,8 +730,8 @@ class ApplicationView(View):
             embed.add_field(name="📕 Description", value=description, inline=False)
             embed.add_field(name="👷 Worker", value=f"<@{self.applicant_id}>", inline=True)
             embed.add_field(name="📌 Customer", value=f"<@{self.customer_id}>", inline=True)
-            embed.add_field(name="💵 Deposit Required", value=f"**```{deposit_required}M```**", inline=True)
-            embed.add_field(name="💰 Order Value", value=f"**```{value}M```**", inline=True)
+            embed.add_field(name="💵 Deposit Required", value=f"**```{deposit_required}$```**", inline=True)
+            embed.add_field(name="💰 Order Value", value=f"**```{value}$```**", inline=True)
             embed.add_field(name="🆔 Order ID", value=self.order_id, inline=True)
             embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
             embed.set_footer(text="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")
@@ -782,7 +783,7 @@ async def on_ready():
         if channel:
             try:
                 message = await channel.fetch_message(order["message_id"])
-                view = OrderButton(order["_id"], order["deposit_required"], order["customer"], order["original_channel_id"], order["message_id"])
+                view = OrderButton(order["_id"], order["deposit_required"], order["customer"], order["original_channel_id"], order["message_id"], order["post_channel_id"])
                 await message.edit(view=view)
             except discord.NotFound:
                 print(f"Order message {order['message_id']} not found, skipping.")
@@ -1047,16 +1048,16 @@ async def complete(interaction: Interaction, order_id: int):
     worker_id = str(order["worker"])
     
     # Transfer funds
-    update_wallet(str(order["customer"]), "spent_dollars", order["value"])
+    update_wallet(str(order["customer"]), "spent_dollars", order["value"], "$")
     
     total_value = order["value"]
     worker_payment = round(total_value * 0.80, 2)
     commission_value = round(total_value * 0.17, 2)
     helper_payment = round(total_value * 0.03, 2)
 
-    update_wallet(str(order["worker"]), "wallet_dollars", float(worker_payment))
-    update_wallet("server", "commission_dollars", float(commission_value))
-    update_wallet(str(order.get("posted_by", interaction.user.id)), "wallet_dollars", float(helper_payment))
+    update_wallet(str(order["worker"]), "wallet_dollars", float(worker_payment), "$")
+    update_wallet("server", "commission_dollars", float(commission_value), "$")
+    update_wallet(str(order.get("posted_by", interaction.user.id)), "wallet_dollars", float(helper_payment), "$")
 
     orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
 
