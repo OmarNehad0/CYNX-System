@@ -440,16 +440,17 @@ async def wallet_add_remove(
 
     if action == "remove":
         if current_wallet < value:
-            await interaction.response.send_message(f"⚠ Insufficient balance to remove {value}{currency}!", ephemeral=True)
+            await interaction.response.send_message(f"⚠️ Insufficient balance to remove {value}{currency}!", ephemeral=True)
             return
         update_wallet(user_id, wallet_key, -value, currency)
     else:
         update_wallet(user_id, wallet_key, value, currency)
 
-    # Refresh data after update
+    # Refresh wallet after update
     updated = get_wallet(user_id)
 
     deposit_value = updated.get("deposit", 0)
+    deposit_dollars = updated.get("deposit_dollars", 0)
     wallet_value = updated.get("wallet", 0)
     wallet_dollars = updated.get("wallet_dollars", 0)
     spent_value = updated.get("spent", 0)
@@ -463,7 +464,7 @@ async def wallet_add_remove(
 
     embed.add_field(
         name="<:70023pepepresident:1321482641475637349> Deposit",
-        value=f"```💵 {deposit_value}M | ${deposit_dollars}```",
+        value=f"```💵 {deposit_value:,}M | ${deposit_dollars:,}```",
         inline=False
     )
     embed.add_field(
@@ -476,14 +477,21 @@ async def wallet_add_remove(
         value=f"```🎃 {spent_value:,}M | ${spent_dollars:,}```",
         inline=False
     )
+
     embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
     embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.user.avatar.url)
 
     await interaction.response.send_message(
-        f"✅ {action.capitalize()}ed {value:,}{currency}.",
+        f"✅ {action.capitalize()}ed {value:,}{currency} to {user.mention}'s wallet.",
         embed=embed
     )
-    await log_command(interaction, "wallet_add_remove", f"User: {user.mention} | Action: {action} | Value: {value:,}{currency}")
+
+    # ✅ Add a command log entry (MongoDB)
+    await log_command(
+        interaction,
+        "wallet_add_remove",
+        f"User: {user.mention} | Action: {action} | Value: {value:,}{currency}"
+    )
 
 
 
