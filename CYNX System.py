@@ -259,6 +259,15 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
     # Get user's avatar (fallback to default image)
     default_thumbnail = "https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&="
     thumbnail_url = user.avatar.url if user.avatar else default_thumbnail
+    # Only show commission wallet for these two owners
+    owner_ids = {"944654043878400120", "617160222573592589"}
+    if user_id in owner_ids:
+        commission_dollars = wallet_data.get('commission_dollars', 0)
+        embed.add_field(
+            name="🏦 Commission Wallet",
+            value=f"💼 ${commission_dollars}",
+            inline=False
+        )
 
     # Create embed message
     embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.from_rgb(139, 0, 0))
@@ -1038,12 +1047,12 @@ async def complete(interaction: Interaction, order_id: int):
     if not has_permission(interaction.user):
         await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
         return
-    
+
     order = orders_collection.find_one({"_id": order_id})
     if not order:
         await interaction.response.send_message("❌ Order not found!", ephemeral=True)
         return
-    
+
     if order.get("status") == "completed":
         await interaction.response.send_message("⚠️ This order has already been marked as completed.", ephemeral=True)
         return
@@ -1051,32 +1060,38 @@ async def complete(interaction: Interaction, order_id: int):
     # Extract customer ID and worker ID
     customer_id = str(order["customer"])
     worker_id = str(order["worker"])
-    
+
     # Transfer funds
-    update_wallet(str(order["customer"]), "spent_dollars", order["value"], "$")
-    
+    update_wallet(customer_id, "spent_dollars", order["value"], "$")
+
     total_value = order["value"]
     worker_payment = round(total_value * 0.80, 2)
-    commission_value = round(total_value * 0.17, 2)
+    commission_total = round(total_value * 0.17, 2)
     helper_payment = round(total_value * 0.03, 2)
 
-    update_wallet(str(order["worker"]), "wallet_dollars", float(worker_payment), "$")
-    update_wallet("server", "commission_dollars", float(commission_value), "$")
+    # Split commission between two owners
+    owner1_id = "944654043878400120"
+    owner2_id = "617160222573592589"
+    commission_split = round(commission_total / 2, 2)
+
+    update_wallet(worker_id, "wallet_dollars", float(worker_payment), "$")
+    update_wallet(owner1_id, "commission_dollars", float(commission_split), "$")
+    update_wallet(owner2_id, "commission_dollars", float(commission_split), "$")
     update_wallet(str(order.get("posted_by", interaction.user.id)), "wallet_dollars", float(helper_payment), "$")
 
+    # Mark order completed
     orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
 
-    # Get the Discord user for role checks
+    # Guild member check and roles
     guild = interaction.guild
     customer = guild.get_member(int(customer_id))
-
     if customer:
         spent_value = order["value"]
         await check_and_assign_roles(customer, 0, spent_value, interaction.client)
     else:
         print(f"[ERROR] Customer {customer_id} not found in the Discord server.")
 
-    # Notify the original channel
+    # Send order completion embed
     original_channel = bot.get_channel(order["original_channel_id"])
     if original_channel:
         embed = Embed(title="✅ Order Completed", color=discord.Color.from_rgb(139, 0, 0))
@@ -1085,24 +1100,22 @@ async def complete(interaction: Interaction, order_id: int):
         embed.add_field(name="📕 Description", value=order.get("description", "No description provided."), inline=False)
         embed.add_field(name="👷 Worker", value=f"<@{order['worker']}>", inline=True)
         embed.add_field(name="📌 Customer", value=f"<@{order['customer']}>", inline=True)
-        embed.add_field(name="💰 Value", value=f"**```{order['value']}$```**", inline=True)
-        embed.add_field(name="👷‍♂️ Worker Payment", value=f"**```{worker_payment}$```**", inline=True)
-        embed.add_field(name="📦 Server Commission", value=f"**```{commission_value}$```**", inline=True)
-        embed.add_field(name="📬 Helper Reward", value=f"**```{helper_payment}$```**", inline=True)
+        embed.add_field(name="💰 Value", value=f"**{order['value']}$**", inline=True)
+        embed.add_field(name="👷‍♂️ Worker Payment", value=f"**{worker_payment}$**", inline=True)
+        embed.add_field(name="🏦 Server Commission", value=f"**{commission_total}$ (split 50/50)**", inline=True)
+        embed.add_field(name="📬 Helper Reward", value=f"**{helper_payment}$**", inline=True)
         embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
         embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         await original_channel.send(embed=embed)
-    
-        # Security reminder embed
+
+        # Security reminder
         security = Embed(
             title="🔒 Security Reminder",
-            description=(
-                f"**<@{customer_id}>**\n\n"
-                "__Please do the following immediately:__\n"
-                "• **Change your account password**\n"
-                "• **End All Sessions**\n"
-                "• **Change your bank PIN** (Optional)\n"
-            ),
+            description=(f"**<@{customer_id}>**\n\n"
+                         "__Please do the following immediately:__\n"
+                         "• **Change your account password**\n"
+                         "• **End All Sessions**\n"
+                         "• **Change your bank PIN** (Optional)\n"),
             color=discord.Color.gold()
         )
         security.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
@@ -1110,16 +1123,16 @@ async def complete(interaction: Interaction, order_id: int):
         security.set_footer(text="Cynx System • Please confirm once done", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         security.add_field(name="⚠️ Action Required", value="**This is for your safety. Please confirm here once changed.**", inline=False)
         await original_channel.send(content=f"<@{customer_id}>", embed=security)
-    
-    # DM the worker
+
+    # DM worker confirmation
     worker = bot.get_user(order["worker"])
     if worker:
         dm_embed = Embed(title="✅ Order Completed", color=discord.Color.from_rgb(139, 0, 0))
         dm_embed.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         dm_embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         dm_embed.add_field(name="📕 Description", value=order.get("description", "No description provided."), inline=False)
-        dm_embed.add_field(name="💰 Value", value=f"**```{order['value']}$```**", inline=True)
-        dm_embed.add_field(name="👷‍♂️ Your Payment", value=f"**```{worker_payment}$```**", inline=True)
+        dm_embed.add_field(name="💰 Value", value=f"**{order['value']}$**", inline=True)
+        dm_embed.add_field(name="👷‍♂️ Your Payment", value=f"**{worker_payment}$**", inline=True)
         dm_embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
         dm_embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         try:
@@ -1127,39 +1140,8 @@ async def complete(interaction: Interaction, order_id: int):
         except discord.Forbidden:
             print(f"[WARNING] Could not DM worker {worker.id}. DMs may be closed.")
 
-    # Notify helper in helper channel
-    helper_id = str(order.get("posted_by", interaction.user.id))
-    helper_channel = bot.get_channel(1395073687199416411)
-
-    if helper_channel:
-        helper_embed = Embed(title="🎯 Helper Commission Summary", color=discord.Color.gold())
-        helper_embed.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
-        helper_embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
-        helper_embed.add_field(name="📜 Order ID", value=f"`{order_id}`", inline=True)
-        helper_embed.add_field(name="💰 Order Value", value=f"**```{order['value']}$```**", inline=True)
-        helper_embed.add_field(name="🎁 Your Share", value=f"**```{helper_payment}$```**", inline=True)
-        helper_embed.set_footer(text=f"Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
-        try:
-            await helper_channel.send(f"<@{helper_id}>", embed=helper_embed)
-        except Exception as e:
-            print(f"[ERROR] Failed to send helper embed: {e}")
-
     await interaction.response.send_message("✅ Order marked as completed successfully!", ephemeral=True)
 
-    await log_command(
-        interaction,
-        "Order Completed",
-        (
-            f"Order ID: {order_id}\n"
-            f"Marked by: {interaction.user.mention} (`{interaction.user.id}`)\n"
-            f"Worker: <@{order['worker']}> (`{order['worker']}`)\n"
-            f"Customer: <@{order['customer']}> (`{order['customer']}`)\n"
-            f"Value: ${total_value}\n"
-            f"Worker Payment: ${worker_payment}\n"
-            f"Server Commission: ${commission_value}\n"
-            f"Helper Reward: ${helper_payment}"
-        )
-    )
 
 @bot.tree.command(name="summary", description="Show users with wallet balances and ongoing orders.")
 async def summary(interaction: discord.Interaction):
