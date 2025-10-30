@@ -1067,7 +1067,7 @@ async def complete(interaction: Interaction, order_id: int):
 
     if customer:
         spent_value = order["value"]
-        await check_and_assign_roles(customer, spent_value, interaction.client)
+        await check_and_assign_roles(customer, 0, spent_value, interaction.client)
     else:
         print(f"[ERROR] Customer {customer_id} not found in the Discord server.")
 
