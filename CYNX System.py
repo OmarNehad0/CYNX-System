@@ -1165,7 +1165,7 @@ async def complete(interaction: Interaction, order_id: int):
         f"Value: {total_value}M\nWorker Payment: {worker_payment}M\n"
         f"Server Commission: {commission_value}M\nHelper Reward: {helper_payment}M"
      ))
-@tree.command(name="commission", description="Add or remove funds from a user's commission wallet ($ only).")
+@bot.tree.command(name="commission", description="Add or remove funds from a user's commission wallet ($ only).")
 @app_commands.describe(
     user="The user to modify commission for.",
     action="Choose whether to add or remove funds.",
