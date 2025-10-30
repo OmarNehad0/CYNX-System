@@ -1178,11 +1178,13 @@ async def complete(interaction: Interaction, order_id: int):
     ]
 )
 async def commission(interaction: discord.Interaction, user: discord.User, action: app_commands.Choice[str], amount: float):
-    await interaction.response.defer(thinking=True)
+    # --- Role restriction ---
+    allowed_roles = {1208792946430836736, 1208792946401615900}
+    user_roles = {role.id for role in interaction.user.roles}
 
-    # Optional: Restrict to admins only
-    if not any(role.name.lower() in ["admin", "owner"] for role in interaction.user.roles):
-        return await interaction.followup.send("🚫 You don't have permission to use this command.", ephemeral=True)
+    if not (allowed_roles & user_roles):
+        await interaction.response.send_message("🚫 You don't have permission to use this command.", ephemeral=True)
+        return
 
     user_id = str(user.id)
     wallet = db.wallets.find_one({"user_id": user_id})
@@ -1193,7 +1195,7 @@ async def commission(interaction: discord.Interaction, user: discord.User, actio
 
     old_balance = wallet.get("commission_dollars", 0)
 
-    # Perform the update
+    # --- Perform the update ---
     if action.value == "add":
         new_balance = old_balance + amount
         update_text = f"➕ Added **${amount:,.2f}** to {user.mention}'s commission wallet."
@@ -1203,13 +1205,13 @@ async def commission(interaction: discord.Interaction, user: discord.User, actio
         update_text = f"➖ Removed **${amount:,.2f}** from {user.mention}'s commission wallet."
         color = 0xff5555
 
-    # Update MongoDB using your structure
+    # Update MongoDB
     db.wallets.update_one(
         {"user_id": user_id},
         {"$set": {"commission_dollars": new_balance}}
     )
 
-    # Confirmation Embed
+    # --- Confirmation Embed ---
     embed = discord.Embed(
         title="💼 Commission Wallet Updated",
         description=update_text,
@@ -1217,13 +1219,17 @@ async def commission(interaction: discord.Interaction, user: discord.User, actio
     )
     embed.add_field(name="Previous Balance", value=f"${old_balance:,.2f}", inline=True)
     embed.add_field(name="New Balance", value=f"${new_balance:,.2f}", inline=True)
-    embed.set_footer(text=f"Action by {interaction.user} • {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     embed.set_thumbnail(url=user.display_avatar.url)
+    embed.set_footer(
+        text=f"Action by {interaction.user} • {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    )
 
-    await interaction.followup.send(embed=embed)
+    await interaction.response.send_message(embed=embed)
 
-    # Log Embed
-    log_channel = discord.utils.get(interaction.guild.text_channels, name="logs")
+    # --- Log Embed ---
+    log_channel_id = 1345311951747813450
+    log_channel = interaction.guild.get_channel(log_channel_id)
+
     if log_channel:
         log_embed = discord.Embed(
             title="📜 Commission Wallet Log",
@@ -1239,6 +1245,7 @@ async def commission(interaction: discord.Interaction, user: discord.User, actio
         log_embed.set_footer(text=f"User ID: {user.id}")
 
         await log_channel.send(embed=log_embed)
+
 
 
 @bot.tree.command(name="summary", description="Show users with wallet balances and ongoing orders.")
