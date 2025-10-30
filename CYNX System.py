@@ -1234,7 +1234,7 @@ async def commission(interaction: discord.Interaction, user: discord.User, actio
         log_embed = discord.Embed(
             title="📜 Commission Wallet Log",
             color=0xffcc00,
-            timestamp=datetime.datetime.now()
+            timestamp=datetime.now()
         )
         log_embed.add_field(name="Action", value=action.value.capitalize(), inline=True)
         log_embed.add_field(name="Amount", value=f"${amount:,.2f}", inline=True)
