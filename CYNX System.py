@@ -463,7 +463,7 @@ async def wallet_add_remove(
 
     embed.add_field(
         name="<:70023pepepresident:1321482641475637349> Deposit",
-        value=f"```💵 {deposit_value:,}M```",
+        value=f"```💵 {deposit_value}M | ${deposit_dollars}```",
         inline=False
     )
     embed.add_field(
@@ -1109,7 +1109,7 @@ async def complete(interaction: Interaction, order_id: int):
         embed.add_field(name="📌 Customer", value=f"<@{order['customer']}>", inline=True)
         embed.add_field(name="💰 Value", value=f"**{order['value']}$**", inline=True)
         embed.add_field(name="👷‍♂️ Worker Payment", value=f"**{worker_payment}$**", inline=True)
-        embed.add_field(name="🏦 Server Commission", value=f"**{commission_total}$ (split 50/50)**", inline=True)
+        embed.add_field(name="🏦 Server Commission", value=f"**{commission_total}$**", inline=True)
         embed.add_field(name="📬 Helper Reward", value=f"**{helper_payment}$**", inline=True)
         embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
         embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
