@@ -173,15 +173,7 @@ async def log_command(interaction: discord.Interaction, command_name: str, detai
         else:
             print(f"⚠️ Log guild not found: {guild_id}")
 
-# Syncing command tree for slash commands
-@bot.event
-async def on_ready():
-    try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} commands.")
-    except Exception as e:
-        print(f"Error syncing commands: {e}")
-
+# Function to get wallet data (updated to handle both m and $)
 def get_wallet(user_id):
     # Attempt to fetch the user's wallet data from MongoDB
     wallet_data = wallets_collection.find_one({"user_id": user_id})
@@ -191,44 +183,55 @@ def get_wallet(user_id):
         print(f"Wallet not found for {user_id}, creating new wallet...")
         wallet_data = {
             "user_id": user_id,
-            "wallet": 0,    # Initialize with 0M
-            "spent": 0,     # Initialize with 0M
-            "deposit": 0    # Initialize with 0M
+            "wallet": 0,     # Initialize with 0M
+            "wallet_dollars": 0,  # Initialize with 0$
+            "spent": 0,      # Initialize with 0M spent
+            "spent_dollars": 0,  # Initialize with 0$ spent
+            "deposit": 0     # Initialize with 0M deposit
         }
         # Insert the new wallet into the database
         wallets_collection.insert_one(wallet_data)
         print(f"New wallet created for {user_id}: {wallet_data}")
 
     return wallet_data
-
 # Function to update wallet in MongoDB
-def update_wallet(user_id, field, value):
+def update_wallet(user_id, field, value, currency):
     # Make sure the wallet document exists before updating
     wallet_data = get_wallet(user_id)
-    
-    # If the wallet does not contain the required field, we initialize it with the correct value
-    if field not in wallet_data:
-        wallet_data[field] = 0  # Initialize the field if missing
 
-    # Update wallet data by incrementing the field value
-    wallets_collection.update_one(
-        {"user_id": user_id},
-        {"$inc": {field: value}},  # Increment the field (e.g., wallet, deposit, spent)
-        upsert=True  # Insert a new document if one doesn't exist
-    )
+    # If the wallet does not contain the required field, we initialize it with the correct value
+    if currency == "m" and field not in wallet_data:
+        wallet_data[field] = 0  # Initialize the field if missing (for millions of gold)
+    elif currency == "$" and field not in wallet_data:
+        wallet_data[field] = 0  # Initialize the field if missing (for dollars)
+
+    # Update wallet data by incrementing the field value based on currency
+    if currency == "m":
+        wallets_collection.update_one(
+            {"user_id": user_id},
+            {"$inc": {field: value}},  # Increment the field (e.g., wallet_m, deposit_m, spent_m)
+            upsert=True  # Insert a new document if one doesn't exist
+        )
+    elif currency == "$":
+        # Update the dollars field
+        wallets_collection.update_one(
+            {"user_id": user_id},
+            {"$inc": {field: value}},  # Increment the dollars field (e.g., wallet_dollars, spent_dollars)
+            upsert=True  # Insert a new document if one doesn't exist
+        )
 
 @bot.tree.command(name="wallet", description="Check a user's wallet balance")
 async def wallet(interaction: discord.Interaction, user: discord.Member = None):
-    # Define role IDs
+    # Define role IDs for special access (e.g., self-only role)
     self_only_roles = {1212728950606794763, 1208822252850909234} 
     allowed_roles = {1208792946430836736, 1208792946401615900, 1211406868480532571, 1208792946401615902}
 
-    # Check if user has permission
+    # Check if the user has permission
     user_roles = {role.id for role in interaction.user.roles}
     has_self_only_role = bool(self_only_roles & user_roles)  # User has at least one self-only role
     has_allowed_role = bool(allowed_roles & user_roles)  # User has at least one allowed role
 
-    # If user has no valid role, deny access
+    # If the user has no valid role, deny access
     if not has_self_only_role and not has_allowed_role:
         await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
         return
@@ -249,17 +252,27 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
     deposit_value = wallet_data.get('deposit', 0)
     wallet_value = wallet_data.get('wallet', 0)
     spent_value = wallet_data.get('spent', 0)
+    wallet_dollars = wallet_data.get('wallet_dollars', 0)
+    spent_dollars = wallet_data.get('spent_dollars', 0)
 
     # Get user's avatar (fallback to default image)
-    default_thumbnail = "https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&="
+    default_thumbnail = "https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif?ex=67bee1db&is=67bd905b&hm=2969ccb9dc0950d378d7a07d8baffccd674edffd7daea2059117e0a3b814a0b6&="
     thumbnail_url = user.avatar.url if user.avatar else default_thumbnail
 
     # Create embed message
     embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.from_rgb(139, 0, 0))
     embed.set_thumbnail(url=thumbnail_url)
+    embed.add_field(
+        name="<:200pxBlood_money_detail:1210284746966306846> Wallet",
+        value=f"```🤑 {wallet_value}M | ${wallet_dollars}```",
+        inline=False
+    )
     embed.add_field(name="<:70023pepepresident:1321482641475637349> Deposit", value=f"```💵 {deposit_value}M```", inline=False)
-    embed.add_field(name="<:200pxBlood_money_detail:1210284746966306846> Wallet", value=f"```🤑 {wallet_value}M```", inline=False)
-    embed.add_field(name="<:wolf:1261406634802941994> Spent", value=f"```🎃 {spent_value}M```", inline=False)
+    embed.add_field(
+        name="<:wolf:1261406634802941994> Spent",
+        value=f"```🎃 {spent_value}M | ${spent_dollars}```",
+        inline=False
+    )
     embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
 
     # Ensure requester avatar exists
@@ -269,100 +282,116 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
     await interaction.response.send_message(embed=embed)
 
 @bot.tree.command(name="add_remove_spent", description="Add or remove spent value from a user's wallet")
-@app_commands.choices(action=[
-    discord.app_commands.Choice(name="Add", value="add"),
-    discord.app_commands.Choice(name="Remove", value="remove")
-])
-async def add_remove_spent(interaction: discord.Interaction, user: discord.Member, action: str, value: float):
+@app_commands.choices(
+    action=[
+        discord.app_commands.Choice(name="Add", value="add"),
+        discord.app_commands.Choice(name="Remove", value="remove")
+    ],
+    currency=[
+        discord.app_commands.Choice(name="M (millions of gold)", value="m"),
+        discord.app_commands.Choice(name="$ (dollars)", value="$")
+    ]
+)
+async def add_remove_spent(
+    interaction: discord.Interaction,
+    user: discord.Member,
+    action: str,
+    currency: str,
+    value: float
+):
     if not has_permission(interaction.user):  # Check role permissions
         await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
         return
 
     user_id = str(user.id)
+
+    # Determine field name based on currency
+    field_name = 'spent_dollars' if currency == '$' else 'spent'
+
+    # Fetch current wallet data
     wallet_data = get_wallet(user_id)
-    
-    # Default missing fields
-    spent_value = wallet_data.get("spent", 0)
+    spent_value = wallet_data.get(field_name, 0)
 
     if action == "remove":
         if spent_value < value:
             await interaction.response.send_message("⚠ Insufficient spent balance to remove!", ephemeral=True)
             return
-        update_wallet(user_id, "spent", -value)
+        update_wallet(user_id, field_name, -value, currency)
     else:
-        update_wallet(user_id, "spent", value)
+        update_wallet(user_id, field_name, value, currency)
 
     # Fetch updated wallet data
     updated_wallet = get_wallet(user_id)
-    spent_value = updated_wallet.get("spent", 0)
-    
-    # Check and assign roles for spending milestones
-    await check_and_assign_roles(user, spent_value, interaction.client)
+    spent_m = updated_wallet.get("spent", 0)
+    spent_dollars = updated_wallet.get("spent_dollars", 0)
 
-    # Create embed response
+    # Assign roles only for M currency
+    if currency == "$":
+        display_value = f"${spent_dollars}"
+        field_name_display = "<:wolf:1261406634802941994> Spent ($)"
+    else:
+        display_value = f"🎃 {spent_m}M"
+        field_name_display = "<:wolf:1261406634802941994> Spent (M)"
+
     embed = discord.Embed(title=f"{user.display_name}'s Wallet 💳", color=discord.Color.from_rgb(139, 0, 0))
     embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
-    embed.add_field(name="<:wolf:1261406634802941994> Spent", value=f"```🎃 {spent_value:,}M```", inline=False)
+    embed.add_field(name=field_name_display, value=f"```{display_value}```", inline=False)
     embed.set_footer(text=f"Updated by {interaction.user.display_name}", icon_url=interaction.user.avatar.url)
 
-    await interaction.response.send_message(f"✅ {action.capitalize()}ed {value:,}M spent.", embed=embed)
-    await log_command(interaction, "add_remove_spent", f"User: {user.mention} | Action: {action} | Value: {value:,}M")
+    await interaction.response.send_message(f"✅ {action.capitalize()} {value}{currency} spent.", embed=embed)
+    await log_command(interaction, "add_remove_spent", f"User: {user.mention} | Action: {action} | Value: {value}{currency}")
+    await check_and_assign_roles(user, spent_m, spent_dollars, interaction.client)
 
-async def check_and_assign_roles(user: discord.Member, spent_value: int, client):
+async def check_and_assign_roles(user: discord.Member, spent_m: float, spent_dollars: float, client):
     """
-    Checks user's spent amount and assigns the correct role if they reach milestones.
-    Sends a congrats message in the announcement channel.
+    Converts $ to M (1$ = 5M) and assigns roles based on total spent.
     """
     role_milestones = {
-        1: 1212554296294514768,  # 1M+
-        4000: 1210262407994413176,  # 4M+
-        5000: 1210262187638132806,  # 5M+
-        7000: 1210090197845282908,  # 7M+
-        9000: 1210088939919118336,  # 9M+
-        14000: 1209962980179968010  # 14M+
+        1: 1212554296294514768,      # 1M+
+        4000: 1210262407994413176,   # 4M+
+        5000: 1210262187638132806,   # 5M+
+        7000: 1210090197845282908,   # 7M+
+        9000: 1210088939919118336,   # 9M+
+        14000: 1209962980179968010   # 14M+
     }
 
-    # Fetch the correct channel
-    congrats_channel = client.get_channel(1210687108457701468)  # Ensure it's the correct ID
+    total_spent_in_m = spent_m + (spent_dollars * 5)
+
+    congrats_channel = client.get_channel(1210687108457701468)
     if congrats_channel is None:
         try:
-            congrats_channel = await client.fetch_channel(1210687108457701468)  
-            print(f"[DEBUG] Successfully fetched channel: {congrats_channel.name} ({congrats_channel.id})")
-        except discord.NotFound:
-            print("[ERROR] Channel not found in API!")
-            return
-        except discord.Forbidden:
-            print("[ERROR] Bot lacks permission to fetch the channel!")
-            return
+            congrats_channel = await client.fetch_channel(1210687108457701468)
         except Exception as e:
-            print(f"[ERROR] Unexpected error fetching channel: {e}")
+            print(f"[ERROR] Could not fetch congrats channel: {e}")
             return
 
-    print(f"[DEBUG] Checking roles for {user.display_name} | Spent: {spent_value}")
+    print(f"[DEBUG] {user.display_name} - Total Spent: {total_spent_in_m}M")
 
     for threshold, role_id in sorted(role_milestones.items()):
         role = user.guild.get_role(role_id)
         if not role:
-            print(f"[ERROR] Role ID {role_id} not found in guild!")
+            print(f"[ERROR] Role ID {role_id} not found!")
             continue
-        
-        print(f"[DEBUG] Checking role {role.name} ({role_id}) for threshold {threshold}")
 
-        if spent_value >= threshold and role not in user.roles:
-            print(f"[DEBUG] Assigning role {role.name} to {user.display_name}")
+        if total_spent_in_m >= threshold and role not in user.roles:
             await user.add_roles(role)
 
-            # Send congrats message
-            print(f"[DEBUG] Sending congrats message for {user.display_name}")
             embed = discord.Embed(
-            title="🎉 Congratulations!",
-            description=f"{user.mention} has reached **{threshold:,}M+** spent and earned a new role!",
-            color=discord.Color.gold()
+                title="🎉 Congratulations!",
+                description=f"{user.mention} has reached **{threshold:,}M+** spent and earned a new role!",
+                color=discord.Color.gold()
             )
             embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
-            embed.add_field(name="🏅 New Role Earned:", value=f"{role.mention}", inline=False)
-            embed.set_footer(text="Keep spending to reach new Lifetime Rank! ✨", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=" )
-            embed.set_author(name="✅ Cynx System ✅", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")
+            embed.add_field(name="🏅 New Role Earned:", value=role.mention, inline=False)
+            embed.set_footer(
+                text="Keep spending to reach new Lifetime Rank! ✨",
+                icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif"
+            )
+            embed.set_author(
+                name="✅ Cynx System ✅",
+                icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif"
+            )
+
             await congrats_channel.send(embed=embed)
 
 
