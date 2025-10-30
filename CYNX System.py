@@ -1143,6 +1143,81 @@ async def complete(interaction: Interaction, order_id: int):
 
     await interaction.response.send_message("✅ Order marked as completed successfully!", ephemeral=True)
 
+@tree.command(name="commission", description="Add or remove funds from a user's commission wallet ($ only).")
+@app_commands.describe(
+    user="The user to modify commission for.",
+    action="Choose whether to add or remove funds.",
+    amount="Amount in USD to add or remove."
+)
+@app_commands.choices(
+    action=[
+        app_commands.Choice(name="Add", value="add"),
+        app_commands.Choice(name="Remove", value="remove")
+    ]
+)
+async def commission(interaction: discord.Interaction, user: discord.User, action: app_commands.Choice[str], amount: float):
+    await interaction.response.defer(thinking=True)
+
+    # Optional: Restrict to admins only
+    if not any(role.name.lower() in ["admin", "owner"] for role in interaction.user.roles):
+        return await interaction.followup.send("🚫 You don't have permission to use this command.", ephemeral=True)
+
+    user_id = str(user.id)
+    wallet = db.wallets.find_one({"user_id": user_id})
+
+    if not wallet:
+        wallet = {"user_id": user_id, "wallet_dollars": 0, "commission_dollars": 0}
+        db.wallets.insert_one(wallet)
+
+    old_balance = wallet.get("commission_dollars", 0)
+
+    # Perform the update
+    if action.value == "add":
+        new_balance = old_balance + amount
+        update_text = f"➕ Added **${amount:,.2f}** to {user.mention}'s commission wallet."
+        color = 0x00ff99
+    else:
+        new_balance = old_balance - amount
+        update_text = f"➖ Removed **${amount:,.2f}** from {user.mention}'s commission wallet."
+        color = 0xff5555
+
+    # Update MongoDB using your structure
+    db.wallets.update_one(
+        {"user_id": user_id},
+        {"$set": {"commission_dollars": new_balance}}
+    )
+
+    # Confirmation Embed
+    embed = discord.Embed(
+        title="💼 Commission Wallet Updated",
+        description=update_text,
+        color=color
+    )
+    embed.add_field(name="Previous Balance", value=f"${old_balance:,.2f}", inline=True)
+    embed.add_field(name="New Balance", value=f"${new_balance:,.2f}", inline=True)
+    embed.set_footer(text=f"Action by {interaction.user} • {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    embed.set_thumbnail(url=user.display_avatar.url)
+
+    await interaction.followup.send(embed=embed)
+
+    # Log Embed
+    log_channel = discord.utils.get(interaction.guild.text_channels, name="logs")
+    if log_channel:
+        log_embed = discord.Embed(
+            title="📜 Commission Wallet Log",
+            color=0xffcc00,
+            timestamp=datetime.datetime.now()
+        )
+        log_embed.add_field(name="Action", value=action.value.capitalize(), inline=True)
+        log_embed.add_field(name="Amount", value=f"${amount:,.2f}", inline=True)
+        log_embed.add_field(name="Old Balance", value=f"${old_balance:,.2f}", inline=True)
+        log_embed.add_field(name="New Balance", value=f"${new_balance:,.2f}", inline=True)
+        log_embed.add_field(name="Target User", value=f"{user.mention}", inline=True)
+        log_embed.add_field(name="Executed By", value=f"{interaction.user.mention}", inline=False)
+        log_embed.set_footer(text=f"User ID: {user.id}")
+
+        await log_channel.send(embed=log_embed)
+
 
 @bot.tree.command(name="summary", description="Show users with wallet balances and ongoing orders.")
 async def summary(interaction: discord.Interaction):
