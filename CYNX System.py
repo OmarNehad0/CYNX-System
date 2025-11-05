@@ -142,6 +142,7 @@ db = client['MongoDB']  # Replace with the name of your database
 wallets_collection = db['wallets']
 orders_collection = db['orders']
 counters_collection = db["order_counters"]  # New collection to track order ID
+tos_collection = db["tos_message"]
 
 # The fixed orders posting channel
 ORDERS_CHANNEL_ID = 1208792946401615893
@@ -288,7 +289,7 @@ async def wallet(interaction: discord.Interaction, user: discord.Member = None):
             value=f"💼 ${commission_dollars}",
             inline=False
         )
-    embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
+    embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
 
     # Ensure requester avatar exists
     requester_avatar = interaction.user.avatar.url if interaction.user.avatar else default_thumbnail
@@ -478,7 +479,7 @@ async def wallet_add_remove(
         inline=False
     )
 
-    embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
+    embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
     embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.user.avatar.url)
 
     await interaction.response.send_message(
@@ -557,7 +558,7 @@ async def deposit(interaction: discord.Interaction, user: discord.Member, action
     )
 
     embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.user.avatar.url)
-    embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
+    embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
 
     await interaction.response.send_message(
         f"✅ {action.capitalize()}ed deposit value for {user.name} by {value:,}{symbol}.",
@@ -615,7 +616,7 @@ async def tip(interaction: discord.Interaction, user: discord.Member, value: int
         inline=False
     )
     embed_sender.set_footer(text=f"Tip sent to {user.display_name}", icon_url=user.avatar.url)
-    embed_sender.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
+    embed_sender.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
 
     # Recipient Embed
     embed_recipient = discord.Embed(title=f"{user.display_name}'s Updated Wallet 💳", color=discord.Color.from_rgb(139, 0, 0))
@@ -636,7 +637,7 @@ async def tip(interaction: discord.Interaction, user: discord.Member, value: int
         inline=False
     )
     embed_recipient.set_footer(text=f"Tip received from {interaction.user.display_name}", icon_url=interaction.user.avatar.url)
-    embed_recipient.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
+    embed_recipient.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
 
     # Channel message
     await interaction.response.send_message(f"💸 {interaction.user.mention} tipped {user.mention} **{value:,}{symbol}**!")
@@ -756,7 +757,7 @@ class ApplicationView(View):
             embed.add_field(name="💵 Deposit Required", value=f"**```{deposit_required}$```**", inline=True)
             embed.add_field(name="💰 Order Value", value=f"**```{value}$```**", inline=True)
             embed.add_field(name="🆔 Order ID", value=self.order_id, inline=True)
-            embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
+            embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
             embed.set_footer(text="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")
             sent_message = await original_channel.send(embed=embed)
             await sent_message.pin()
@@ -892,7 +893,7 @@ async def post(
     if image:
         embed.set_image(url=image)
     else:
-        embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
+        embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
 
     embed.set_footer(
         text=f"Order ID: {order_id}",
@@ -997,7 +998,7 @@ async def set_order(
     embed.add_field(name="💵 Deposit Required", value=f"**```{formatted_deposit}```**", inline=True)
     embed.add_field(name="🕵️‍♂️ Holder", value=holder.mention, inline=True)
     embed.add_field(name="👷 Worker", value=worker.mention, inline=True)
-    embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
+    embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
     embed.set_footer(text=f"Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/985890908027367474/1208891137910120458/Cynx_avatar.gif")
 
     # إرسال الإيمبد
@@ -1119,7 +1120,7 @@ async def complete(interaction: Interaction, order_id: int):
         embed.add_field(name="👷‍♂️ Worker Payment", value=f"**{worker_payment}$**", inline=True)
         embed.add_field(name="🏦 Server Commission", value=f"**{commission_total}$**", inline=True)
         embed.add_field(name="📬 Helper Reward", value=f"**{helper_payment}$**", inline=True)
-        embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
+        embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
         embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         await original_channel.send(embed=embed)
 
@@ -1231,7 +1232,7 @@ async def complete(interaction: Interaction, order_id: int):
         dm_embed.add_field(name="📕 Description", value=order.get("description", "No description provided."), inline=False)
         dm_embed.add_field(name="💰 Value", value=f"**{order['value']}$**", inline=True)
         dm_embed.add_field(name="👷‍♂️ Your Payment", value=f"**{worker_payment}$**", inline=True)
-        dm_embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif")
+        dm_embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
         dm_embed.set_footer(text=f"📜 Order ID: {order_id}", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
         try:
             await worker.send(embed=dm_embed)
@@ -1348,63 +1349,6 @@ async def commission(interaction: discord.Interaction, user: discord.User, actio
 
         await log_channel.send(embed=log_embed)
 
-
-
-@bot.tree.command(name="summary", description="Show users with wallet balances and ongoing orders.")
-async def summary(interaction: discord.Interaction):
-    if not has_permission(interaction.user):
-        await interaction.response.send_message("❌ You don't have permission to use this command.", ephemeral=True)
-        return
-
-    # === Wallet Overview ===
-    wallets = list(wallets_collection.find({
-        "$or": [
-            {"wallet": {"$gt": 0}},
-            {"deposit": {"$gt": 0}}
-        ]
-    }))
-
-    wallet_summary = ""
-    for w in wallets:
-        user_id = w.get("user_id", "Unknown")
-        wallet_amount = w.get("wallet", 0)
-        deposit_amount = w.get("deposit", 0)
-        spent_amount = w.get("spent", 0)
-        wallet_summary += f"<@{user_id}> → 💵 **{wallet_amount}M** | 🏦 Deposit: **{deposit_amount}M** | 🎃 Spent: **{spent_amount}M**\n"
-
-    if not wallet_summary:
-        wallet_summary = "_No users have money in their wallet or deposit._"
-
-    # === Orders Overview ===
-    in_progress_orders = list(orders_collection.find({
-        "$or": [
-            {"status": {"$in": ["in_progress", "claimed"]}},
-            {"completed": {"$ne": True}}
-        ]
-    }))
-
-    order_summary = ""
-    for o in in_progress_orders:
-        order_id = o.get("_id", "N/A")
-        worker = o.get("worker")
-        customer = o.get("customer")
-        order_summary += f"🆔 **Order {order_id}** → 👷 {f'<@{worker}>' if worker else 'Unassigned'} | 👤 {f'<@{customer}>' if customer else 'Unknown'}\n"
-
-    if not order_summary:
-        order_summary = "_No ongoing orders found._"
-
-    # === Create Embed ===
-    embed = discord.Embed(
-        title="📊 System Summary",
-        description="Overview of wallet balances and active orders",
-        color=discord.Color.from_rgb(139, 0, 0)
-    )
-    embed.add_field(name="💰 Users With Wallets", value=wallet_summary[:1024], inline=False)
-    embed.add_field(name="📦 Orders In Progress", value=order_summary[:1024], inline=False)
-    embed.set_footer(text=f"Requested by {interaction.user.display_name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
-
-    await interaction.response.send_message(embed=embed)
-
 # 📌 /order_deletion command
 @bot.tree.command(name="order_deletion", description="Delete an order.")
 async def order_deletion(interaction: Interaction, order_id: int):
@@ -1476,10 +1420,10 @@ async def view_order(interaction: discord.Interaction, order_id: int):
     embed.add_field(name="📌 Customer", value=f"<@{customer_id}>" if isinstance(customer_id, int) else customer_id, inline=False)
     embed.add_field(name="🎟️ Holder", value=f"<@{holder_id}>" if isinstance(holder_id, int) else holder_id, inline=False)
     embed.add_field(name="📕 Description", value=description, inline=False)
-    embed.add_field(name="💵 Deposit", value=f"**```{deposit}M```**", inline=True)
-    embed.add_field(name="💰 Order Value", value=f"**```{value}M```**", inline=True)
+    embed.add_field(name="💵 Deposit", value=f"**```{deposit}$```**", inline=True)
+    embed.add_field(name="💰 Order Value", value=f"**```{value}$```**", inline=True)
     embed.add_field(name="🆔 Order ID", value=order_id, inline=False)
-    embed.set_image(url="https://media.discordapp.net/attachments/985890908027367474/1258798457318019153/Cynx_banner.gif?ex=67bf2b6b&is=67bdd9eb&hm=ac2c065a9b39c3526624f939f4af2b1457abb29bfb8d56a6f2ab3eafdb2bb467&=")
+    embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
     embed.set_thumbnail(url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")
     await interaction.response.send_message(embed=embed)
 
@@ -1538,9 +1482,10 @@ async def tos(ctx):
         "**•** Do not post or send links, advertisements, or spam messages within our server or tickets.\n"
         "**•** Failure to follow staff instructions or repeated misconduct may result in ticket closure or a blacklist from future services.\n\n"
 
-        "**•** By continuing with Cynx Services, you acknowledge and agree to these Terms of Service.\n\n>💎 Cynx Services — Crafted by Hand. Trusted by Experience.")
-
-    embed.set_footer(text="React below to accept our Terms of Service ✅")
+        "**•** By continuing with Cynx Services, you acknowledge and agree to these Terms of Service.\n\n> 💎 Cynx Services — Crafted by Hand. Trusted by Experience.")
+    embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")
+    embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
+    embed.set_footer(text="React below to accept our TOS & See rest of server ✅" , icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif"")
 
     # Send embed
         # Send embed
