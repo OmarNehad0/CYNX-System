@@ -1485,6 +1485,112 @@ async def view_order(interaction: discord.Interaction, order_id: int):
 
 
 
+
+# === SETTINGS ===
+TOS_ROLE_ID = 1208822252850909234  # Role ID to give
+TOS_EMOJI = "✅"  # You can replace this with a custom emoji like <:verify:133420012345678901>
+TOS_CHANNEL_ID = 1208792946883690552  # Optional: set to your TOS channel ID to restrict reaction detection
+
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def tos(ctx):
+    """Send the full Terms of Service embed and auto-react."""
+    embed = discord.Embed(
+        title="📕 **Cynx Services — Terms of Service**",
+        color=discord.Color.gold()
+    )
+
+    embed.description = (
+        "Please read these terms carefully before requesting or beginning any service with Cynx Services. By opening a ticket or purchasing a service, you agree to the following:\n"
+        "__**⚖️ General Terms**__\n"
+        "We reserve the right to decline or cancel any order for any reason.\n"
+        "Do not log in to your account while a service is in progress unless you have explicit permission from an admin or your assigned worker.\n"
+        "Do not change your account login details until your order has been completed. Changing your password during an active service will void the order and no refund will be issued.\n"
+        "All payments are final and non-refundable once the service has begun. Payment must be made in full before any work starts.\n\n"
+
+        "__**💼 Account Safety**__\n"
+        "All orders are completed 100% by hand — we never use bots or illegal plugins.\n"
+        "• We are not responsible for any loss of wealth, items, or valuables on your account before, during, or after the service.\n"
+        "• If you choose not to remove excess wealth, you do so at your own risk.\n"
+        "• Ensure that only Cynx staff have your credentials.\n"
+        "• We recommend enabling your authenticator and changing your password both before and after the service.\n\n"
+
+        "__**⚒️ Service Requirements**__\n"
+        "You must provide all necessary items, resources, and supplies for your requested service in a timely manner.\n"
+        "If additional resources are required during the service, you will be notified to provide them before work continues.\n\n"
+
+        "__**🚫 Account Infractions**__\n"
+        "We are not responsible for any infractions or bans that occur. All services are completed 100% by hand using RuneLite — never automated.\n"
+        "Live Updates Via Dink"
+        "In the event of a rollback, we are not obligated to redo progress lost prior to that event.\n\n"
+
+        "__**🧾 Refunds & Disputes*__\n"
+        "No full refunds will be issued in the case of a ban, as all services are done by hand.\n"
+        "If a worker mistake occurs (e.g., an account mute caused by inappropriate chat), you may appeal to staff for partial or full compensation at the owner’s discretion.\n\n"
+
+        "__**☠️ Ironman & Restrictions**__\n"
+        "We are not responsible for unwanted experience gains or Hardcore Ironman (HCIM) deaths.\n"
+        "You must clearly list all account restrictions before starting a ticket.\n"
+        "Compensation for HCIM deaths will only be considered with owner approval.\n\n"
+
+        "__**🚫 Behavior Policy**__\n"
+        "Do not post or send links, advertisements, or spam messages within our server or tickets.\n"
+        "Failure to follow staff instructions or repeated misconduct may result in ticket closure or a blacklist from future services.\n\n"
+
+        "By continuing with Cynx Services, you acknowledge and agree to these Terms of Service.\n💎 Cynx Services — Crafted by Hand. Trusted by Experience.")
+
+    embed.set_footer(text="React below to accept our Terms of Service ✅")
+
+    # Send embed
+        # Send embed
+    message = await ctx.send(embed=embed)
+    await message.add_reaction(TOS_EMOJI)
+
+    # Store message ID in MongoDB
+    tos_collection.update_one(
+        {"_id": "tos_message"},
+        {"$set": {"message_id": message.id}},
+        upsert=True
+    )
+
+    # Add reaction automatically
+    await message.add_reaction(TOS_EMOJI)
+
+    await ctx.send("✅ TOS embed sent successfully and reaction added.")
+
+
+# === REACTION EVENT ===
+@bot.event
+async def on_raw_reaction_add(payload):
+    """Gives TOS role when reacting to the TOS embed."""
+    if payload.member is None or payload.member.bot:
+        return
+
+    # Check correct channel
+    if payload.channel_id != TOS_CHANNEL_ID:
+        return
+
+    # Only match the correct emoji
+    if str(payload.emoji) != TOS_EMOJI:
+        return
+
+    # Fetch stored TOS message ID
+    tos_doc = tos_collection.find_one({"_id": "tos_message"})
+    if not tos_doc or payload.message_id != tos_doc["message_id"]:
+        return  # Not the correct message
+
+    guild = bot.get_guild(payload.guild_id)
+    if not guild:
+        return
+
+    role = guild.get_role(TOS_ROLE_ID)
+    if role:
+        try:
+            await payload.member.add_roles(role, reason="Accepted Terms of Service")
+            print(f"✅ {payload.member} accepted the TOS and received the role.")
+        except Exception as e:
+            print(f"❌ Failed to assign TOS role: {e}")
 # Syncing command tree for slash commands
 @bot.event
 async def on_ready():
