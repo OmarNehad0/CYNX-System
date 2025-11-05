@@ -1502,43 +1502,43 @@ async def tos(ctx):
     )
 
     embed.description = (
-        "Please read these terms carefully before requesting or beginning any service with Cynx Services. By opening a ticket or purchasing a service, you agree to the following:\n"
+        "> Please read these terms carefully before requesting or beginning any service with Cynx Services.\n> By opening a ticket or purchasing a service, you agree to the following:\n\n"
         "__**⚖️ General Terms**__\n"
-        "We reserve the right to decline or cancel any order for any reason.\n"
-        "Do not log in to your account while a service is in progress unless you have explicit permission from an admin or your assigned worker.\n"
-        "Do not change your account login details until your order has been completed. Changing your password during an active service will void the order and no refund will be issued.\n"
-        "All payments are final and non-refundable once the service has begun. Payment must be made in full before any work starts.\n\n"
+        "**•** We reserve the right to decline or cancel any order for any reason.\n"
+        "**•** Do not log in to your account while a service is in progress unless you have explicit permission from an admin or your assigned worker.\n"
+        "**•** Do not change your account login details until your order has been completed. Changing your password during an active service will void the order and no refund will be issued.\n"
+        "**•** All payments are final and non-refundable once the service has begun. Payment must be made in full before any work starts.\n\n"
 
         "__**💼 Account Safety**__\n"
-        "All orders are completed 100% by hand — we never use bots or illegal plugins.\n"
-        "• We are not responsible for any loss of wealth, items, or valuables on your account before, during, or after the service.\n"
-        "• If you choose not to remove excess wealth, you do so at your own risk.\n"
-        "• Ensure that only Cynx staff have your credentials.\n"
-        "• We recommend enabling your authenticator and changing your password both before and after the service.\n\n"
+        "**•** All orders are completed 100% by hand — we never use bots or illegal plugins.\n"
+        "**•** We are not responsible for any loss of wealth, items, or valuables on your account before, during, or after the service.\n"
+        "**•** If you choose not to remove excess wealth, you do so at your own risk.\n"
+        "**•** Ensure that only Cynx staff have your credentials.\n"
+        "**•** We recommend enabling your authenticator and changing your password both before and after the service.\n\n"
 
         "__**⚒️ Service Requirements**__\n"
-        "You must provide all necessary items, resources, and supplies for your requested service in a timely manner.\n"
-        "If additional resources are required during the service, you will be notified to provide them before work continues.\n\n"
+        "**•** You must provide all necessary items, resources, and supplies for your requested service in a timely manner.\n"
+        "**•** If additional resources are required during the service, you will be notified to provide them before work continues.\n\n"
 
         "__**🚫 Account Infractions**__\n"
-        "We are not responsible for any infractions or bans that occur. All services are completed 100% by hand using RuneLite — never automated.\n"
-        "Live Updates Via Dink"
-        "In the event of a rollback, we are not obligated to redo progress lost prior to that event.\n\n"
+        "**•** We are not responsible for any infractions or bans that occur. All services are completed 100% by hand using RuneLite — never automated.\n"
+        "**•** Live Updates Via Dink"
+        "**•** In the event of a rollback, we are not obligated to redo progress lost prior to that event.\n\n"
 
         "__**🧾 Refunds & Disputes*__\n"
-        "No full refunds will be issued in the case of a ban, as all services are done by hand.\n"
-        "If a worker mistake occurs (e.g., an account mute caused by inappropriate chat), you may appeal to staff for partial or full compensation at the owner’s discretion.\n\n"
+        "**•** No full refunds will be issued in the case of a ban, as all services are done by hand.\n"
+        "**•** If a worker mistake occurs (e.g., an account mute caused by inappropriate chat), you may appeal to staff for partial or full compensation at the owner’s discretion.\n\n"
 
         "__**☠️ Ironman & Restrictions**__\n"
-        "We are not responsible for unwanted experience gains or Hardcore Ironman (HCIM) deaths.\n"
-        "You must clearly list all account restrictions before starting a ticket.\n"
-        "Compensation for HCIM deaths will only be considered with owner approval.\n\n"
+        "**•** We are not responsible for unwanted experience gains or Hardcore Ironman (HCIM) deaths.\n"
+        "**•** You must clearly list all account restrictions before starting a ticket.\n"
+        "**•** Compensation for HCIM deaths will only be considered with owner approval.\n\n"
 
         "__**🚫 Behavior Policy**__\n"
-        "Do not post or send links, advertisements, or spam messages within our server or tickets.\n"
-        "Failure to follow staff instructions or repeated misconduct may result in ticket closure or a blacklist from future services.\n\n"
+        "**•** Do not post or send links, advertisements, or spam messages within our server or tickets.\n"
+        "**•** Failure to follow staff instructions or repeated misconduct may result in ticket closure or a blacklist from future services.\n\n"
 
-        "By continuing with Cynx Services, you acknowledge and agree to these Terms of Service.\n💎 Cynx Services — Crafted by Hand. Trusted by Experience.")
+        "**•** By continuing with Cynx Services, you acknowledge and agree to these Terms of Service.\n\n>💎 Cynx Services — Crafted by Hand. Trusted by Experience.")
 
     embed.set_footer(text="React below to accept our Terms of Service ✅")
 
