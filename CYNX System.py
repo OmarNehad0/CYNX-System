@@ -1485,10 +1485,9 @@ async def tos(ctx):
         "**•** By continuing with Cynx Services, you acknowledge and agree to these Terms of Service.\n\n> 💎 Cynx Services — Crafted by Hand. Trusted by Experience.")
     embed.set_author(name="Cynx System", icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif?ex=6836d866&is=683586e6&hm=c818d597519f4b2e55c77aeae4affbf0397e12591743e1069582f605c125f80c&=")
     embed.set_image(url="https://media.discordapp.net/attachments/1208792947232079955/1435680057522782289/banner-cynx.gif?ex=690cd8bf&is=690b873f&hm=5d09bda6cc0b4d526b8bcf99d4e0c75a7f3dcf7777092edaa82de02b8d459a79&=")
-    embed.set_footer(text="React below to accept our TOS & See rest of server ✅" , icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif"")
+    embed.set_footer(text="React below to accept our TOS & See rest of server ✅" , icon_url="https://media.discordapp.net/attachments/1208792947232079955/1376855814735921212/discord_with_services_avatar.gif")
 
     # Send embed
-        # Send embed
     message = await ctx.send(embed=embed)
     await message.add_reaction(TOS_EMOJI)
 
