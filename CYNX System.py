@@ -833,7 +833,7 @@ def get_next_order_id():
 @bot.tree.command(name="post", description="Post a new order.")
 @app_commands.describe(
     customer="The customer for the order",
-    value="The value of the order (in millions)",
+    value="The value of the order (in $$)",
     deposit_required="The deposit required for the order",
     holder="The holder of the order",
     channel="The channel to post the order (mention or ID)",
@@ -954,7 +954,7 @@ async def post(
 async def set_order(
     interaction: Interaction,
     customer: discord.Member,
-    value: int,
+    value: float,
     deposit_required: int,
     holder: discord.Member,
     description: str,
