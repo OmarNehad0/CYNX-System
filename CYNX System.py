@@ -53,7 +53,7 @@ subscriptions = defaultdict(set)
 rsn_subscriptions = defaultdict(set)
 # Replace this with your actual Dink webhook channel ID
 DINK_CHANNEL_ID = 1374820955330969691  # <-- REPLACE THIS
-
+FEEDBACK_CHANNEL_ID = 1208792946883690551
 # ==== Slash Commands ====
 
 @bot.tree.command(name="track_rsn", description="Subscribe this channel to a specific RSN.")
