@@ -197,29 +197,30 @@ def get_wallet(user_id):
     return wallet_data
 # Function to update wallet in MongoDB
 def update_wallet(user_id, field, value, currency):
-    # Make sure the wallet document exists before updating
+    # Convert all values to float safely
+    try:
+        value = float(value)
+    except:
+        print(f"❌ ERROR: Invalid value passed to update_wallet: {value}")
+        return
+
+    # Make sure the wallet document exists
     wallet_data = get_wallet(user_id)
 
-    # If the wallet does not contain the required field, we initialize it with the correct value
-    if currency == "m" and field not in wallet_data:
-        wallet_data[field] = 0  # Initialize the field if missing (for millions of gold)
-    elif currency == "$" and field not in wallet_data:
-        wallet_data[field] = 0  # Initialize the field if missing (for dollars)
+    # If the field doesn't exist, initialize it
+    if field not in wallet_data:
+        wallets_collection.update_one(
+            {"user_id": user_id},
+            {"$set": {field: 0}},
+            upsert=True
+        )
 
-    # Update wallet data by incrementing the field value based on currency
-    if currency == "m":
-        wallets_collection.update_one(
-            {"user_id": user_id},
-            {"$inc": {field: value}},  # Increment the field (e.g., wallet_m, deposit_m, spent_m)
-            upsert=True  # Insert a new document if one doesn't exist
-        )
-    elif currency == "$":
-        # Update the dollars field
-        wallets_collection.update_one(
-            {"user_id": user_id},
-            {"$inc": {field: value}},  # Increment the dollars field (e.g., wallet_dollars, spent_dollars)
-            upsert=True  # Insert a new document if one doesn't exist
-        )
+    # Increment safely
+    wallets_collection.update_one(
+        {"user_id": user_id},
+        {"$inc": {field: value}},
+        upsert=True
+    )
 
 @bot.tree.command(name="wallet", description="Check a user's wallet balance")
 async def wallet(interaction: discord.Interaction, user: discord.Member = None):
@@ -1068,34 +1069,47 @@ async def complete(interaction: Interaction, order_id: int):
         await interaction.response.send_message("⚠️ This order has already been marked as completed.", ephemeral=True)
         return
 
-    # Extract customer ID and worker ID
+    # ------------ VALUE SANITIZER (fixes 864 / 1080 / 720 bugs forever) ------------
+    def fix_value(v):
+        if isinstance(v, (int, float)):
+            return float(v)
+        s = str(v).lower().replace("$", "").replace(",", "").strip()
+
+        if "k" in s:
+            return float(s.replace("k", "")) * 1000
+        if "m" in s:
+            return float(s.replace("m", "")) * 1_000_000
+
+        return float(s)
+
+    value = fix_value(order["value"])
+    # -------------------------------------------------------------------------------
+
+    # IDs
     customer_id = str(order["customer"])
     worker_id = str(order["worker"])
+    helper_id = str(order.get("posted_by"))  # may be None
 
-    # Transfer funds
-    update_wallet(customer_id, "spent_dollars", order["value"], "$")
+    # Percentages
+    worker_payment = round(value * 0.80, 2)
+    commission_total = round(value * 0.15, 2)
+    helper_payment = round(value * 0.05, 2)
 
-    total_value = order["value"]
-    worker_payment = round(total_value * 0.80, 2)
-    commission_total = round(total_value * 0.15, 2)
-    helper_payment = round(total_value * 0.05, 2)
-
-    # Split commission between two owners
+    # Owners
     owner1_id = "944654043878400120"
     owner2_id = "617160222573592589"
     commission_split = round(commission_total / 2, 2)
 
-    update_wallet(worker_id, "wallet_dollars", float(worker_payment), "$")
-    update_wallet(owner1_id, "commission_dollars", float(commission_split), "$")
-    update_wallet(owner2_id, "commission_dollars", float(commission_split), "$")
-    helper_id = str(order.get("posted_by"))
+    # Update wallets
+    update_wallet(customer_id, "spent_dollars", value, "$")           # customer spent
+    update_wallet(worker_id, "wallet_dollars", worker_payment, "$")   # worker
+    update_wallet(owner1_id, "commission_dollars", commission_split, "$")
+    update_wallet(owner2_id, "commission_dollars", commission_split, "$")
+
     if helper_id:
-        update_wallet(helper_id, "wallet_dollars", float(helper_payment), "$")
-    else:
-        print(f"[WARNING] Order {order_id} has no 'posted_by' — helper payment skipped.")
+        update_wallet(helper_id, "wallet_dollars", helper_payment, "$")
 
-
-    # Mark order completed
+    # Mark order as completed in DB
     orders_collection.update_one({"_id": order_id}, {"$set": {"status": "completed"}})
 
     # Guild member check and roles
@@ -1208,7 +1222,7 @@ async def complete(interaction: Interaction, order_id: int):
             description=(
                 "**<:wolf:1261406634802941994> We Appreciate Your Vouch on [Sythe](https://www.sythe.org/threads/www-sythe-org-threads-cynx-osrs-service-vouch-thread/page-6#post-85913828).**\n"
                 "✨ **Get a +10% Discount** When You Vouch.\n"
-                "<a:1184850417100804216:1210704452185620512> **Check Discounts Here.** <#1319266483397853195> \n\n"
+                "<a:1184850417100804216:1210704452185620512> **Check Discounts Here.** <#1208792946883690549> \n\n"
                 "**Please select your rating below (1–5 stars).**\n"
                 "Once Selected, You Will Be Asked To Leave A Review."
             )
